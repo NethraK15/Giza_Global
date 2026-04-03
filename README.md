@@ -1,4 +1,4 @@
-# Giza GLobal Parser
+# Giza Global Parser
 
 Giza GLobal Parser is a full-stack P&ID document parsing SaaS prototype built with React + Vite on the frontend and Node.js + Express for backend mock APIs.
 
