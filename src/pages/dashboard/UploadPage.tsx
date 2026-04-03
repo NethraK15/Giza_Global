@@ -1,16 +1,24 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, CloudUpload } from "lucide-react";
+import { FileText, CheckCircle2, AlertCircle, Loader2, CloudUpload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 
 type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
 
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_EXTENSIONS = ["pdf", "png", "jpg", "jpeg"];
+
+const formatMb = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(2)}MB`;
+
 export default function UploadPage() {
   const [state, setState] = useState<UploadState>("idle");
   const [fileName, setFileName] = useState("");
   const [progress, setProgress] = useState(0);
+  const [validationError, setValidationError] = useState("");
+  const [createdJobId, setCreatedJobId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const simulateProgress = () => {
     setProgress(0);
@@ -23,20 +31,87 @@ export default function UploadPage() {
     return interval;
   };
 
+  const validateFile = (file: File): string | null => {
+    const extension = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      return `Unsupported file type. Upload one of: ${ALLOWED_EXTENSIONS.join(", ")}.`;
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return `File is too large (${formatMb(file.size)}). Maximum allowed size is 5MB.`;
+    }
+    return null;
+  };
+
+  const startUpload = (file: File) => {
+    setValidationError("");
+    setCreatedJobId(null);
+    setState("uploading");
+    setFileName(file.name || "document");
+    const interval = simulateProgress();
+
+    const token = localStorage.getItem("document-genie-token");
+    if (!token) {
+      setTimeout(() => {
+        clearInterval(interval);
+        setProgress(100);
+        setState("success");
+      }, 2500);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch("http://localhost:4000/api/upload", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Upload failed");
+        }
+        return data;
+      })
+      .then((data) => {
+        setCreatedJobId(data.jobId);
+        clearInterval(interval);
+        setProgress(100);
+        setState("success");
+      })
+      .catch((err) => {
+        clearInterval(interval);
+        setState("error");
+        setValidationError(err instanceof Error ? err.message : "Upload failed");
+      });
+  };
+
+  const processSelectedFile = (file: File | undefined) => {
+    if (!file) return;
+    const error = validateFile(file);
+    if (error) {
+      setValidationError(error);
+      setFileName(file.name);
+      setState("error");
+      return;
+    }
+    startUpload(file);
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setState("uploading");
     const file = e.dataTransfer.files[0];
-    setFileName(file?.name || "document.pdf");
-    const interval = simulateProgress();
-    setTimeout(() => { clearInterval(interval); setProgress(100); setState("success"); }, 2500);
+    processSelectedFile(file);
   };
 
   const handleFileSelect = () => {
-    setState("uploading");
-    setFileName("selected_document.pdf");
-    const interval = simulateProgress();
-    setTimeout(() => { clearInterval(interval); setProgress(100); setState("success"); }, 2500);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    processSelectedFile(e.target.files?.[0]);
+    e.currentTarget.value = "";
   };
 
   const simulateError = () => {
@@ -50,6 +125,8 @@ export default function UploadPage() {
     setState("idle");
     setFileName("");
     setProgress(0);
+    setValidationError("");
+    setCreatedJobId(null);
   };
 
   return (
@@ -80,16 +157,26 @@ export default function UploadPage() {
                   onDragLeave={() => setState("idle")}
                   onDrop={handleDrop}
                 >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    className="hidden"
+                    onChange={handleFileInputChange}
+                  />
                   <div className="bg-muted rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-5">
                     <CloudUpload className="h-7 w-7 text-muted-foreground" />
                   </div>
                   <h3 className="font-semibold text-base mb-1">Drop your document here</h3>
                   <p className="text-sm text-muted-foreground mb-6">
-                    PDF, DOCX, PNG, JPG up to 25MB
+                    PDF, PNG, JPG up to 5MB
                   </p>
                   <Button variant="default" onClick={handleFileSelect}>
                     <FileText className="mr-2 h-4 w-4" /> Browse Files
                   </Button>
+                  {validationError && (
+                    <p className="text-sm text-destructive mt-4" role="alert">{validationError}</p>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -126,7 +213,10 @@ export default function UploadPage() {
                   <CheckCircle2 className="h-7 w-7 text-success" />
                 </div>
                 <h3 className="font-semibold text-base mb-1">Upload Successful!</h3>
-                <p className="text-sm text-muted-foreground mb-6">{fileName} is being processed.</p>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {fileName} is queued for processing.
+                  {createdJobId ? ` Job ID: ${createdJobId}` : ""}
+                </p>
                 <Button variant="default" onClick={reset}>Upload Another</Button>
               </motion.div>
             )}
@@ -144,7 +234,7 @@ export default function UploadPage() {
                 </div>
                 <h3 className="font-semibold text-base mb-1">Upload Failed</h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                  {fileName} could not be processed. The file may be corrupted or unsupported.
+                  {validationError || `${fileName} could not be processed. The file may be corrupted or unsupported.`}
                 </p>
                 <Button variant="default" onClick={reset}>Try Again</Button>
               </motion.div>
@@ -157,7 +247,7 @@ export default function UploadPage() {
       <Card>
         <CardHeader className="pb-3"><CardTitle className="text-xs text-muted-foreground uppercase tracking-wider">Demo Controls</CardTitle></CardHeader>
         <CardContent className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleFileSelect}>Simulate Success</Button>
+          <Button variant="outline" size="sm" onClick={handleFileSelect}>Select File</Button>
           <Button variant="outline" size="sm" onClick={simulateError}>Simulate Error</Button>
           <Button variant="outline" size="sm" onClick={reset}>Reset</Button>
         </CardContent>

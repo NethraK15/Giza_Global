@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 
 export default function DashboardOverview() {
   const completed = mockJobs.filter((j) => j.status === "completed").length;
-  const processing = mockJobs.filter((j) => j.status === "processing" || j.status === "pending").length;
+  const processing = mockJobs.filter((j) => j.status === "processing" || j.status === "queued").length;
   const failed = mockJobs.filter((j) => j.status === "failed").length;
   const usagePercent = (mockUsage.used / mockUsage.limit) * 100;
 
@@ -130,12 +130,12 @@ export default function DashboardOverview() {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; className: string; dot: string }> = {
-    pending: { label: "Pending", className: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
+    queued: { label: "Queued", className: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
     processing: { label: "Processing", className: "bg-info/10 text-info", dot: "bg-info animate-pulse-soft" },
     completed: { label: "Completed", className: "bg-success/10 text-success", dot: "bg-success" },
     failed: { label: "Failed", className: "bg-destructive/10 text-destructive", dot: "bg-destructive" },
   };
-  const c = config[status] || config.pending;
+  const c = config[status] || config.queued;
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${c.className}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />

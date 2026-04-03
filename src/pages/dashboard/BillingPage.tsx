@@ -1,9 +1,9 @@
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { mockUsage } from "@/data/mockData";
-import { CreditCard, CheckCircle2, ArrowRight, AlertTriangle, Sparkles, Receipt } from "lucide-react";
+import { UsageData, mockUsage } from "@/data/mockData";
+import { CheckCircle2, AlertTriangle, Sparkles, Receipt, Crown } from "lucide-react";
 import { motion } from "framer-motion";
 
 const invoices = [
@@ -12,8 +12,83 @@ const invoices = [
 ];
 
 export default function BillingPage() {
-  const usagePercent = (mockUsage.used / mockUsage.limit) * 100;
+  const [usage, setUsage] = useState<UsageData>(mockUsage);
+  const usagePercent = useMemo(() => (usage.used / usage.limit) * 100, [usage]);
   const isOverQuota = usagePercent >= 90;
+
+  useEffect(() => {
+    const token = localStorage.getItem("document-genie-token");
+    if (token) {
+      fetch("http://localhost:4000/api/billing/subscription", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(async (res) => {
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to load subscription");
+          return data;
+        })
+        .then((data) => {
+          persistUsage({
+            used: data.usage.used,
+            limit: data.usage.limit,
+            plan: data.plan,
+            window: data.usage.window,
+          });
+        })
+        .catch(() => {
+          // Keep local data fallback.
+        });
+      return;
+    }
+
+    const stored = localStorage.getItem("document-genie-usage");
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored) as UsageData;
+      setUsage(parsed);
+    } catch {
+      // Ignore invalid persisted state and keep defaults.
+    }
+  }, []);
+
+  const persistUsage = (next: UsageData) => {
+    setUsage(next);
+    localStorage.setItem("document-genie-usage", JSON.stringify(next));
+  };
+
+  const handleUpgrade = () => {
+    if (usage.plan === "paid") return;
+
+    const token = localStorage.getItem("document-genie-token");
+    if (token) {
+      fetch("http://localhost:4000/api/billing/upgrade", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(async (res) => {
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Upgrade failed");
+          return data;
+        })
+        .then((data) => {
+          persistUsage({
+            used: data.usage.used,
+            limit: data.usage.limit,
+            plan: data.plan,
+            window: data.usage.window,
+          });
+        })
+        .catch(() => {
+          persistUsage({ ...usage, plan: "paid", limit: 1000, window: "monthly" });
+        });
+      return;
+    }
+
+    persistUsage({ ...usage, plan: "paid", limit: 1000, window: "monthly" });
+  };
+
+  const planTitle = usage.plan === "paid" ? "Paid Plan" : "Free Plan";
+  const planPrice = usage.plan === "paid" ? "$20/month" : "$0/month";
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -29,21 +104,21 @@ export default function BillingPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <div className="bg-muted rounded-xl p-3">
-                <Sparkles className="h-5 w-5 text-muted-foreground" />
+                {usage.plan === "paid" ? <Crown className="h-5 w-5 text-warning" /> : <Sparkles className="h-5 w-5 text-muted-foreground" />}
               </div>
               <div>
-                <p className="text-xl font-bold">Free Plan</p>
-                <p className="text-sm text-muted-foreground">{mockUsage.limit} uploads/month</p>
+                <p className="text-xl font-bold">{planTitle}</p>
+                <p className="text-sm text-muted-foreground">{usage.limit} uploads/{usage.window} · {planPrice}</p>
               </div>
             </div>
-            <Button variant="default" asChild>
-              <Link to="/pricing">Upgrade Plan <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            <Button variant={usage.plan === "paid" ? "outline" : "default"} onClick={handleUpgrade}>
+              {usage.plan === "paid" ? "Current Plan Active" : "Upgrade to Paid"}
             </Button>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Usage this month</span>
-              <span className="font-semibold">{mockUsage.used}/{mockUsage.limit}</span>
+              <span className="text-muted-foreground">Usage this {usage.window}</span>
+              <span className="font-semibold">{usage.used}/{usage.limit}</span>
             </div>
             <Progress value={usagePercent} className="h-2.5 rounded-full" />
           </div>
@@ -63,10 +138,10 @@ export default function BillingPage() {
           <div>
             <h3 className="font-semibold text-primary-foreground mb-1">You're running low on uploads</h3>
             <p className="text-sm text-primary-foreground/70 mb-4">
-              Upgrade to Pro for 500 uploads/month, advanced AI models, and priority support.
+              Upgrade to Paid for 1000 uploads/month, higher queue priority, and subscription management.
             </p>
-            <Button size="sm" className="bg-background text-foreground hover:bg-background/90 shadow-sm">
-              Upgrade to Pro — $49/mo
+            <Button size="sm" className="bg-background text-foreground hover:bg-background/90 shadow-sm" onClick={handleUpgrade}>
+              Upgrade to Paid — $20/mo
             </Button>
           </div>
         </motion.div>

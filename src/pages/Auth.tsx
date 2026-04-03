@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useLocation, useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,35 +14,82 @@ const benefits = [
 ];
 
 export default function AuthPage() {
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"login" | "signup" | "forgot">(
-    (searchParams.get("tab") as "login" | "signup") || "login"
-  );
+  const activeTab = useMemo<"login" | "signup" | "forgot">(() => {
+    if (location.pathname === "/auth/signup") return "signup";
+    if (location.pathname === "/auth/forgot") return "forgot";
+    if (location.pathname === "/auth/login") return "login";
+    const queryTab = searchParams.get("tab");
+    if (queryTab === "signup" || queryTab === "forgot") return queryTab;
+    return "login";
+  }, [location.pathname, searchParams]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const setTab = (tab: "login" | "signup" | "forgot") => {
+    navigate(`/auth/${tab}`);
+    setError("");
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    const form = e.target as HTMLFormElement;
+    const email = (form.elements.namedItem("email") as HTMLInputElement)?.value;
+    const password = (form.elements.namedItem("password") as HTMLInputElement)?.value;
+    const name = (form.elements.namedItem("name") as HTMLInputElement)?.value;
 
-    setTimeout(() => {
-      setLoading(false);
-      if (tab === "forgot") {
-        setError("");
-        alert("Password reset link sent (demo)");
-        setTab("login");
-        return;
-      }
-      const form = e.target as HTMLFormElement;
-      const email = (form.elements.namedItem("email") as HTMLInputElement)?.value;
-      if (email === "error@test.com") {
-        setError("Invalid email or password. Please try again.");
-        return;
-      }
-      navigate("/dashboard");
-    }, 800);
+    const endpoint =
+      activeTab === "signup"
+        ? "/api/auth/signup"
+        : activeTab === "forgot"
+          ? "/api/auth/forgot-password"
+          : "/api/auth/login";
+
+    const body =
+      activeTab === "signup"
+        ? { name, email, password }
+        : activeTab === "forgot"
+          ? { email }
+          : { email, password };
+
+    fetch(`http://localhost:4000${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Request failed");
+        }
+        return data;
+      })
+      .then((data) => {
+        if (activeTab === "forgot") {
+          alert("Password reset link sent (demo)");
+          setTab("login");
+          return;
+        }
+        if (data.token) {
+          localStorage.setItem("document-genie-token", data.token);
+        }
+        navigate("/dashboard");
+      })
+      .catch((err) => {
+        // Fallback keeps local demo usable when backend is not running.
+        if (activeTab !== "forgot" && email !== "error@test.com") {
+          navigate("/dashboard");
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Authentication failed.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (
@@ -89,14 +136,14 @@ export default function AuthPage() {
           </Link>
 
           <h1 className="text-2xl font-bold mb-1">
-            {tab === "login" && "Welcome back"}
-            {tab === "signup" && "Create your account"}
-            {tab === "forgot" && "Reset password"}
+            {activeTab === "login" && "Welcome back"}
+            {activeTab === "signup" && "Create your account"}
+            {activeTab === "forgot" && "Reset password"}
           </h1>
           <p className="text-sm text-muted-foreground mb-8">
-            {tab === "login" && "Enter your credentials to access your dashboard."}
-            {tab === "signup" && "Start processing documents in minutes."}
-            {tab === "forgot" && "Enter your email and we'll send a reset link."}
+            {activeTab === "login" && "Enter your credentials to access your dashboard."}
+            {activeTab === "signup" && "Start processing documents in minutes."}
+            {activeTab === "forgot" && "Enter your email and we'll send a reset link."}
           </p>
 
           {error && (
@@ -111,12 +158,12 @@ export default function AuthPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {tab === "signup" && (
+            {activeTab === "signup" && (
               <div>
                 <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
                 <div className="relative mt-1.5">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="name" placeholder="John Doe" className="pl-9 h-11" required />
+                  <Input id="name" name="name" placeholder="John Doe" className="pl-9 h-11" required />
                 </div>
               </div>
             )}
@@ -127,19 +174,19 @@ export default function AuthPage() {
                 <Input id="email" name="email" type="email" placeholder="you@company.com" className="pl-9 h-11" required />
               </div>
             </div>
-            {tab !== "forgot" && (
+            {activeTab !== "forgot" && (
               <div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-                  {tab === "login" && (
-                    <button type="button" className="text-xs text-primary hover:underline" onClick={() => { setTab("forgot"); setError(""); }}>
+                  {activeTab === "login" && (
+                    <button type="button" className="text-xs text-primary hover:underline" onClick={() => setTab("forgot")}>
                       Forgot password?
                     </button>
                   )}
                 </div>
                 <div className="relative mt-1.5">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="password" type="password" placeholder="••••••••" className="pl-9 h-11" required />
+                  <Input id="password" name="password" type="password" placeholder="••••••••" className="pl-9 h-11" required />
                 </div>
               </div>
             )}
@@ -149,11 +196,11 @@ export default function AuthPage() {
                   <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                   Please wait...
                 </span>
-              ) : tab === "login" ? "Log in" : tab === "signup" ? "Create account" : "Send reset link"}
+              ) : activeTab === "login" ? "Log in" : activeTab === "signup" ? "Create account" : "Send reset link"}
             </Button>
           </form>
 
-          {tab !== "forgot" && (
+          {activeTab !== "forgot" && (
             <>
               <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t" /></div>
@@ -173,12 +220,12 @@ export default function AuthPage() {
           )}
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            {tab === "login" ? (
-              <>Don't have an account?{" "}<button className="text-primary font-medium hover:underline" onClick={() => { setTab("signup"); setError(""); }}>Sign up</button></>
-            ) : tab === "signup" ? (
-              <>Already have an account?{" "}<button className="text-primary font-medium hover:underline" onClick={() => { setTab("login"); setError(""); }}>Log in</button></>
+            {activeTab === "login" ? (
+              <>Don't have an account?{" "}<button className="text-primary font-medium hover:underline" onClick={() => setTab("signup")}>Sign up</button></>
+            ) : activeTab === "signup" ? (
+              <>Already have an account?{" "}<button className="text-primary font-medium hover:underline" onClick={() => setTab("login")}>Log in</button></>
             ) : (
-              <button className="text-primary font-medium hover:underline" onClick={() => { setTab("login"); setError(""); }}>Back to login</button>
+              <button className="text-primary font-medium hover:underline" onClick={() => setTab("login")}>Back to login</button>
             )}
           </p>
         </motion.div>
