@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -20,7 +20,7 @@ export default function BillingPage() {
   const usagePercent = useMemo(() => (usage.used / usage.limit) * 100, [usage]);
   const isOverQuota = usagePercent >= 90;
 
-  const getLocalUsage = (): UsageData | null => {
+  const getLocalUsage = useCallback((): UsageData | null => {
     const stored = localStorage.getItem("document-genie-usage");
     if (!stored) return null;
     try {
@@ -28,14 +28,14 @@ export default function BillingPage() {
     } catch {
       return null;
     }
-  };
+  }, []);
 
-  const loadUsageFromLocalStorage = () => {
+  const loadUsageFromLocalStorage = useCallback(() => {
     const parsed = getLocalUsage();
     if (parsed) {
       setUsage(parsed);
     }
-  };
+  }, [getLocalUsage]);
 
   const parseApiResponse = async (res: Response) => {
     const contentType = res.headers.get("content-type") || "";
@@ -83,7 +83,7 @@ export default function BillingPage() {
     }
 
     loadUsageFromLocalStorage();
-  }, []);
+  }, [getLocalUsage, loadUsageFromLocalStorage]);
 
   const persistUsage = (next: UsageData) => {
     setUsage(next);
