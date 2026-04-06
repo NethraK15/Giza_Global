@@ -46,11 +46,13 @@ export function DashboardSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
+                      aria-label={item.title}
+                      title={collapsed ? item.title : undefined}
                       end={item.url === "/dashboard"}
                       className="hover:bg-sidebar-accent/50 rounded-lg transition-colors"
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                     >
-                      <item.icon className="mr-2 h-4 w-4" />
+                      <item.icon aria-hidden="true" className="mr-2 h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -64,8 +66,8 @@ export function DashboardSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link to="/" className="hover:bg-sidebar-accent/50 rounded-lg transition-colors">
-                <LogOut className="mr-2 h-4 w-4" />
+              <Link to="/" aria-label="Log out" title={collapsed ? "Log out" : undefined} className="hover:bg-sidebar-accent/50 rounded-lg transition-colors">
+                <LogOut aria-hidden="true" className="mr-2 h-4 w-4" />
                 {!collapsed && <span>Log out</span>}
               </Link>
             </SidebarMenuButton>

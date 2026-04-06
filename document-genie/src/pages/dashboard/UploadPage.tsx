@@ -184,6 +184,8 @@ export default function UploadPage() {
                   onDrop={handleDrop}
                 >
                   <input
+                    id="upload-file-input"
+                    aria-label="Upload document file"
                     ref={fileInputRef}
                     type="file"
                     accept=".pdf,.png,.jpg,.jpeg"
@@ -191,14 +193,14 @@ export default function UploadPage() {
                     onChange={handleFileInputChange}
                   />
                   <div className="bg-muted rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-5">
-                    <CloudUpload className="h-7 w-7 text-muted-foreground" />
+                    <CloudUpload aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
                   </div>
                   <h3 className="font-semibold text-base mb-1">Drop your document here</h3>
                   <p className="text-sm text-muted-foreground mb-6">
                     PDF, PNG, JPG up to 5MB
                   </p>
                   <Button variant="default" onClick={handleFileSelect}>
-                    <FileText className="mr-2 h-4 w-4" /> Browse Files
+                    <FileText aria-hidden="true" className="mr-2 h-4 w-4" /> Browse Files
                   </Button>
                   {validationError && (
                     <p className="text-sm text-destructive mt-4" role="alert">{validationError}</p>
@@ -216,7 +218,7 @@ export default function UploadPage() {
                 className="p-12 text-center"
               >
                 <div className="bg-primary/10 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-5">
-                  <Loader2 className="h-7 w-7 text-primary animate-spin" />
+                  <Loader2 aria-hidden="true" className="h-7 w-7 text-primary animate-spin" />
                 </div>
                 <h3 className="font-semibold text-base mb-1">Processing {fileName}</h3>
                 <p className="text-sm text-muted-foreground mb-6">Uploading and starting AI analysis...</p>
@@ -236,7 +238,7 @@ export default function UploadPage() {
                 className="p-12 text-center"
               >
                 <div className="bg-success/10 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-5">
-                  <CheckCircle2 className="h-7 w-7 text-success" />
+                  <CheckCircle2 aria-hidden="true" className="h-7 w-7 text-success" />
                 </div>
                 <h3 className="font-semibold text-base mb-1">Upload Successful!</h3>
                 <p className="text-sm text-muted-foreground mb-6">
@@ -256,7 +258,7 @@ export default function UploadPage() {
                 className="p-12 text-center"
               >
                 <div className="bg-destructive/10 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-5">
-                  <AlertCircle className="h-7 w-7 text-destructive" />
+                  <AlertCircle aria-hidden="true" className="h-7 w-7 text-destructive" />
                 </div>
                 <h3 className="font-semibold text-base mb-1">Upload Failed</h3>
                 <p className="text-sm text-muted-foreground mb-6">

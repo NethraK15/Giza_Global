@@ -99,7 +99,7 @@ export default function JobsPage() {
             {isPollingActive ? "Polling" : "Up to date"}
           </span>
           <Button variant="outline" size="sm" onClick={handleManualPoll}>
-            <RefreshCcw className="h-4 w-4 mr-2" />
+            <RefreshCcw aria-hidden="true" className="h-4 w-4 mr-2" />
             Refresh
           </Button>
         </div>
@@ -137,7 +137,7 @@ export default function JobsPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="bg-muted rounded-lg p-2 shrink-0">
-                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <FileText aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <span className="font-medium text-sm truncate max-w-[200px]">{job.fileName}</span>
                         </div>
@@ -153,8 +153,12 @@ export default function JobsPage() {
                       <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{job.uploadedAt}</TableCell>
                       <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{job.completedAt || "—"}</TableCell>
                       <TableCell>
-                        <button className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                          <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                        <button
+                          type="button"
+                          aria-label={`Open actions for ${job.fileName}`}
+                          className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                        >
+                          <MoreHorizontal aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
                         </button>
                       </TableCell>
                     </motion.tr>

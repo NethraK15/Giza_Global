@@ -19,7 +19,7 @@ export function Navbar() {
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 font-bold text-lg">
           <div className="gradient-primary rounded-xl p-2 shadow-sm">
-            <FileText className="h-4 w-4 text-primary-foreground" />
+            <FileText aria-hidden="true" className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="tracking-tight">Giza Global</span>
         </Link>
@@ -52,10 +52,14 @@ export function Navbar() {
 
         {/* Mobile toggle */}
         <button
+          type="button"
+          aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-navigation-menu"
           className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? <X aria-hidden="true" className="h-5 w-5" /> : <Menu aria-hidden="true" className="h-5 w-5" />}
         </button>
       </div>
 
@@ -63,6 +67,7 @@ export function Navbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
+            id="mobile-navigation-menu"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}

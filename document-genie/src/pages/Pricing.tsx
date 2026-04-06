@@ -98,9 +98,13 @@ export default function PricingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
+            role="group"
+            aria-label="Billing period selector"
             className="inline-flex items-center gap-3 rounded-full bg-muted p-1"
           >
             <button
+              type="button"
+              aria-pressed={!yearly}
               onClick={() => setYearly(false)}
               className={cn(
                 "px-5 py-2 rounded-full text-sm font-medium transition-all",
@@ -110,6 +114,8 @@ export default function PricingPage() {
               Monthly
             </button>
             <button
+              type="button"
+              aria-pressed={yearly}
               onClick={() => setYearly(true)}
               className={cn(
                 "px-5 py-2 rounded-full text-sm font-medium transition-all",
