@@ -1,0 +1,35 @@
+# Core framework
+fastapi
+uvicorn
+python-multipart
+pydantic
+pydantic-settings
+python-dotenv
+
+# Image processing
+opencv-python-headless
+numpy
+pillow
+
+# PDF conversion
+pdf2image
+
+# YOLO object detection (giza-pidparser models)
+ultralytics
+torch
+torchvision
+
+# Testing
+pytest
+httpx
+requests
+
+# giza-pidparser specific dependencies
+pymupdf
+pandas
+scikit-image
+easyocr
+networkx
+matplotlib
+pyvis
+django

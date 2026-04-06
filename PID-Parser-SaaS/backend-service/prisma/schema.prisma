@@ -1,0 +1,54 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  displayName   String?  // Optional user display name
+  passwordHash  String
+  planId        String   @default("free-plan-id")
+  plan          Plan     @relation(fields: [planId], references: [id])
+  dailyUsage    Int      @default(0)
+  monthlyUsage  Int      @default(0)
+  lastResetDate DateTime @default(now()) // used to track when to reset counters
+  jobs          Job[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Plan {
+  id           String   @id @default(uuid())
+  name         String   @unique // "free", "paid"
+  maxDaily     Int      @default(5)
+  maxMonthly   Int      @default(150)
+  users        User[]
+}
+
+model Job {
+  id             String     @id @default(uuid())
+  userId         String
+  user           User       @relation(fields: [userId], references: [id])
+  status         String     @default("queued") // queued, processing, completed, failed
+  originalFile   String // Storage path/URL to uploaded file
+  fileSize       Int
+  artifacts      Artifact[]
+  processingTime Float?
+  error          String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Artifact {
+  id        String   @id @default(uuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  name      String // e.g., "overlay", "results", "graph"
+  path      String // URL or relative path to the artifact
+  createdAt DateTime @default(now())
+}
