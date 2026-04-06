@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, FileText } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navLinks = [
   { label: "Home", to: "/" },
@@ -15,8 +16,13 @@ export function Navbar() {
   const location = useLocation();
 
   return (
-    <nav className="sticky top-0 z-50 border-b glass">
-      <div className="container flex h-16 items-center justify-between">
+    <motion.nav
+      initial={{ y: -18, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      className="sticky top-0 z-50 border-b border-border/80 glass supports-[backdrop-filter]:bg-background/85"
+    >
+      <div className="container flex h-16 items-center justify-between gap-3">
         <Link to="/" className="flex items-center gap-2.5 font-bold text-lg">
           <div className="gradient-primary rounded-xl p-2 shadow-sm">
             <FileText aria-hidden="true" className="h-4 w-4 text-primary-foreground" />
@@ -30,10 +36,10 @@ export function Navbar() {
             <Link
               key={link.to}
               to={link.to}
-              className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`relative px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 ${
                 location.pathname === link.to
-                  ? "text-foreground bg-muted"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  ? "text-foreground bg-accent shadow-sm"
+                  : "text-foreground/80 dark:text-foreground/85 hover:text-foreground hover:bg-accent/70"
               }`}
             >
               {link.label}
@@ -42,6 +48,7 @@ export function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-2">
+          <ThemeToggle className="h-9 w-9 rounded-full border-border/80 bg-background/90" />
           <Button variant="ghost" size="sm" asChild>
             <Link to="/auth">Log in</Link>
           </Button>
@@ -71,18 +78,21 @@ export function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="md:hidden border-t bg-background overflow-hidden"
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="md:hidden border-t border-border/80 bg-background/95 overflow-hidden"
           >
             <div className="p-4 space-y-1">
+              <div className="mb-3 flex justify-end">
+                <ThemeToggle className="h-9 w-9 rounded-full border-border/80 bg-background/90" />
+              </div>
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`block py-2.5 px-3 rounded-lg text-sm font-medium transition-colors ${
+                  className={`block py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
                     location.pathname === link.to
-                      ? "text-foreground bg-muted"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      ? "text-foreground bg-accent"
+                      : "text-foreground/80 hover:text-foreground hover:bg-accent/70"
                   }`}
                   onClick={() => setMobileOpen(false)}
                 >
@@ -101,6 +111,6 @@ export function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </motion.nav>
   );
 }

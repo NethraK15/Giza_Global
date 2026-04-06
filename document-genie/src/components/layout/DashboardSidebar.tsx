@@ -1,6 +1,6 @@
-import { LayoutDashboard, Upload, ListTodo, FileSearch, CreditCard, LogOut, FileText, Settings } from "lucide-react";
+import { LayoutDashboard, Upload, ListTodo, FileSearch, CreditCard, LogOut, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -25,10 +25,9 @@ const mainItems = [
 export function DashboardSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border/80">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>
@@ -49,8 +48,8 @@ export function DashboardSidebar() {
                       aria-label={item.title}
                       title={collapsed ? item.title : undefined}
                       end={item.url === "/dashboard"}
-                      className="hover:bg-sidebar-accent/50 rounded-lg transition-colors"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                      className="text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition-colors"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground border border-sidebar-border/70 font-semibold"
                     >
                       <item.icon aria-hidden="true" className="mr-2 h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}

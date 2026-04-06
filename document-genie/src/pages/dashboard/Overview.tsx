@@ -20,7 +20,7 @@ export default function DashboardOverview() {
   ];
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-6xl smooth-appear">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -62,9 +62,9 @@ export default function DashboardOverview() {
             key={stat.label}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
+            transition={{ delay: i * 0.06, duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="surface-elevated hover:shadow-lg transition-shadow">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm text-muted-foreground font-medium">{stat.label}</span>
@@ -85,7 +85,7 @@ export default function DashboardOverview() {
       </div>
 
       {/* Usage */}
-      <Card>
+      <Card className="surface-elevated">
         <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Monthly Usage</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-center justify-between text-sm mb-3">
@@ -98,7 +98,7 @@ export default function DashboardOverview() {
       </Card>
 
       {/* Recent jobs */}
-      <Card>
+      <Card className="surface-elevated">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-base font-semibold">Recent Jobs</CardTitle>
           <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>

@@ -3,7 +3,8 @@ import { FileText } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/30">
+    <footer className="relative border-t border-border/70 bg-card/40 backdrop-blur-sm">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(211_100%_56%_/_0.08),transparent_40%)]" />
       <div className="container py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
           <div className="col-span-2 md:col-span-1">
@@ -42,7 +43,7 @@ export function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
+        <div className="mt-12 pt-8 border-t border-border/70 text-center text-sm text-muted-foreground">
           © 2026 Giza Global. All rights reserved.
         </div>
       </div>

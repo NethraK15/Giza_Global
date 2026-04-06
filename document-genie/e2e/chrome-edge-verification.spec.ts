@@ -80,7 +80,7 @@ test.describe("Roadmap browser verification flows", () => {
 
     await page.goto("/dashboard/billing");
 
-    await expect(page.getByText(/You\'re running low on uploads/i)).toBeVisible();
+    await expect(page.getByText(/You're running low on uploads/i)).toBeVisible();
     await page.getByRole("button", { name: /^Upgrade to Paid$/i }).click();
     await expect(page.getByRole("button", { name: /Current Plan Active/i })).toBeVisible();
   });
