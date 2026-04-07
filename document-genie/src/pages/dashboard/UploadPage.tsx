@@ -67,11 +67,9 @@ export default function UploadPage() {
 
     const token = localStorage.getItem("document-genie-token");
     if (!token) {
-      setTimeout(() => {
-        clearInterval(interval);
-        setProgress(100);
-        setState("success");
-      }, 2500);
+      clearInterval(interval);
+      setState("error");
+      setValidationError("Please sign in before uploading a document.");
       return;
     }
 
@@ -141,10 +139,8 @@ export default function UploadPage() {
   };
 
   const simulateError = () => {
-    setState("uploading");
-    setFileName("corrupted_file.pdf");
-    const interval = simulateProgress();
-    setTimeout(() => { clearInterval(interval); setState("error"); }, 2000);
+    setState("error");
+    setValidationError("Demo error injection has been disabled. Use a real file upload to test the pipeline.");
   };
 
   const reset = () => {
@@ -271,12 +267,11 @@ export default function UploadPage() {
         </CardContent>
       </Card>
 
-      {/* Demo controls */}
+      {/* Developer controls */}
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-xs text-muted-foreground uppercase tracking-wider">Demo Controls</CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-xs text-muted-foreground uppercase tracking-wider">Developer Controls</CardTitle></CardHeader>
         <CardContent className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleFileSelect}>Select File</Button>
-          <Button variant="outline" size="sm" onClick={simulateError}>Simulate Error</Button>
           <Button variant="outline" size="sm" onClick={reset}>Reset</Button>
         </CardContent>
       </Card>

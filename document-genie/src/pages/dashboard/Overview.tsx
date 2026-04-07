@@ -1,19 +1,70 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockJobs, mockUsage } from "@/data/mockData";
+import { Job, UsageData } from "@/data/mockData";
 import { Upload, CheckCircle2, Clock, AlertTriangle, ArrowRight, FileText, TrendingUp, Activity } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "http://localhost:4000";
+
+const emptyUsage: UsageData = {
+  used: 0,
+  limit: 0,
+  plan: "free",
+  window: "monthly",
+};
+
 export default function DashboardOverview() {
-  const completed = mockJobs.filter((j) => j.status === "completed").length;
-  const processing = mockJobs.filter((j) => j.status === "processing" || j.status === "queued").length;
-  const failed = mockJobs.filter((j) => j.status === "failed").length;
-  const usagePercent = (mockUsage.used / mockUsage.limit) * 100;
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [usage, setUsage] = useState<UsageData>(emptyUsage);
+
+  useEffect(() => {
+    const token = localStorage.getItem("document-genie-token");
+    if (!token) return;
+
+    const loadData = async () => {
+      try {
+        const [jobsRes, usageRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/jobs`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_BASE_URL}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+
+        const jobsData = await jobsRes.json();
+        const usageData = await usageRes.json();
+
+        if (jobsRes.ok) {
+          setJobs(Array.isArray(jobsData.jobs) ? jobsData.jobs : Array.isArray(jobsData.data?.jobs) ? jobsData.data.jobs : []);
+        }
+
+        if (usageRes.ok) {
+          const payload = usageData?.data ?? usageData;
+          const planName = payload?.planName || payload?.plan || "free";
+          const isPaid = planName !== "free";
+          setUsage({
+            used: isPaid ? (payload?.monthlyUsage ?? 0) : (payload?.dailyUsage ?? 0),
+            limit: isPaid ? (payload?.maxMonthly ?? 150) : (payload?.maxDaily ?? 5),
+            plan: isPaid ? "paid" : "free",
+            window: isPaid ? "monthly" : "daily",
+          });
+        }
+      } catch {
+        setJobs([]);
+        setUsage(emptyUsage);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const completed = useMemo(() => jobs.filter((j) => j.status === "completed").length, [jobs]);
+  const processing = useMemo(() => jobs.filter((j) => j.status === "processing" || j.status === "queued").length, [jobs]);
+  const failed = useMemo(() => jobs.filter((j) => j.status === "failed").length, [jobs]);
+  const usagePercent = usage.limit > 0 ? (usage.used / usage.limit) * 100 : 0;
 
   const stats = [
-    { label: "Total Jobs", value: mockJobs.length, icon: Activity, trend: "+12%", color: "text-foreground" },
+    { label: "Total Jobs", value: jobs.length, icon: Activity, trend: "", color: "text-foreground" },
     { label: "Completed", value: completed, icon: CheckCircle2, trend: "+8%", color: "text-success" },
     { label: "In Progress", value: processing, icon: Clock, trend: "", color: "text-info" },
     { label: "Failed", value: failed, icon: AlertTriangle, trend: "", color: "text-destructive" },
@@ -44,7 +95,7 @@ export default function DashboardOverview() {
             </div>
             <div>
               <p className="text-sm font-semibold text-primary-foreground">
-                You've used {mockUsage.used} of {mockUsage.limit} uploads this month
+                You've used {usage.used} of {usage.limit} uploads this {usage.window}
               </p>
               <p className="text-xs text-primary-foreground/60 mt-0.5">Upgrade for more capacity</p>
             </div>
@@ -89,11 +140,11 @@ export default function DashboardOverview() {
         <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Monthly Usage</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-center justify-between text-sm mb-3">
-            <span className="text-muted-foreground">{mockUsage.used} of {mockUsage.limit} uploads used</span>
+            <span className="text-muted-foreground">{usage.used} of {usage.limit} uploads used</span>
             <span className="font-semibold">{Math.round(usagePercent)}%</span>
           </div>
           <Progress value={usagePercent} className="h-2.5 rounded-full" />
-          <p className="text-xs text-muted-foreground mt-3">Plan: {mockUsage.plan.charAt(0).toUpperCase() + mockUsage.plan.slice(1)} · Resets monthly</p>
+          <p className="text-xs text-muted-foreground mt-3">Plan: {usage.plan.charAt(0).toUpperCase() + usage.plan.slice(1)} · Resets {usage.window}</p>
         </CardContent>
       </Card>
 
@@ -107,7 +158,7 @@ export default function DashboardOverview() {
         </CardHeader>
         <CardContent>
           <div className="space-y-1">
-            {mockJobs.slice(0, 4).map((job) => (
+            {jobs.slice(0, 4).map((job) => (
               <div key={job.id} className="flex items-center justify-between py-3 px-3 rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="bg-muted rounded-lg p-2">

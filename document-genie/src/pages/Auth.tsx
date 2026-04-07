@@ -80,11 +80,6 @@ export default function AuthPage() {
         navigate("/dashboard");
       })
       .catch((err) => {
-        // Fallback keeps local demo usable when backend is not running.
-        if (activeTab !== "forgot" && email !== "error@test.com") {
-          navigate("/dashboard");
-          return;
-        }
         setError(err instanceof Error ? err.message : "Authentication failed.");
       })
       .finally(() => {

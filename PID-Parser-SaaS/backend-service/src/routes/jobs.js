@@ -44,7 +44,31 @@ const toBrowserStorageUrl = (filePath) => {
 const toArtifactUrl = (artifactPath) => {
   if (!artifactPath) return null;
   if (/^https?:\/\//i.test(artifactPath)) return artifactPath;
-  const normalized = artifactPath.replace(/^\/+/, '');
+
+  const normalized = artifactPath.replace(/\\/g, '/').replace(/^\/+/, '');
+
+  // Some AI outputs include app/static paths (sometimes prefixed by job id).
+  const appStaticMarker = '/app/static/';
+  const staticMarker = '/static/';
+  const appStaticIndex = normalized.indexOf(appStaticMarker);
+  const staticIndex = normalized.indexOf(staticMarker);
+
+  if (normalized.startsWith('app/static/')) {
+    return `http://127.0.0.1:8000/static/${normalized.slice('app/static/'.length)}`;
+  }
+
+  if (normalized.startsWith('static/')) {
+    return `http://127.0.0.1:8000/static/${normalized.slice('static/'.length)}`;
+  }
+
+  if (appStaticIndex !== -1) {
+    return `http://127.0.0.1:8000/static/${normalized.slice(appStaticIndex + appStaticMarker.length)}`;
+  }
+
+  if (staticIndex !== -1) {
+    return `http://127.0.0.1:8000/static/${normalized.slice(staticIndex + staticMarker.length)}`;
+  }
+
   return `http://127.0.0.1:8000/artifacts/${normalized}`;
 };
 

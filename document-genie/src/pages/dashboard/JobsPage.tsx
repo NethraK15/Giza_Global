@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Job, mockJobs } from "@/data/mockData";
+import { Job } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { FileText, MoreHorizontal, RefreshCcw } from "lucide-react";
 import { motion } from "framer-motion";
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "http://localhost:4000";
 
 const statusConfig: Record<Job["status"], { label: string; className: string; dot: string }> = {
   queued: { label: "Queued", className: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
@@ -15,27 +17,8 @@ const statusConfig: Record<Job["status"], { label: string; className: string; do
 
 const POLL_INTERVAL_MS = 3000;
 
-const formatDateTime = (date = new Date()) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-
-const pollJobStatuses = (jobs: Job[]): Job[] =>
-  jobs.map((job) => {
-    if (job.status === "queued") {
-      return { ...job, status: "processing" };
-    }
-    if (job.status === "processing") {
-      const didFail = job.id.endsWith("5");
-      return {
-        ...job,
-        status: didFail ? "failed" : "completed",
-        completedAt: didFail ? undefined : formatDateTime(),
-      };
-    }
-    return job;
-  });
-
 const fetchRemoteJobs = async (token: string): Promise<Job[]> => {
-  const response = await fetch("http://localhost:4000/api/jobs", {
+  const response = await fetch(`${API_BASE_URL}/api/jobs`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await response.json();
@@ -46,13 +29,15 @@ const fetchRemoteJobs = async (token: string): Promise<Job[]> => {
 };
 
 export default function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>(mockJobs);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [lastPolledAt, setLastPolledAt] = useState<Date>(new Date());
+  const [loadMessage, setLoadMessage] = useState<string | null>(null);
 
   const poll = async () => {
     const token = localStorage.getItem("document-genie-token");
     if (!token) {
-      setJobs((currentJobs) => pollJobStatuses(currentJobs));
+      setJobs([]);
+      setLoadMessage("Sign in to view your backend job queue.");
       setLastPolledAt(new Date());
       return;
     }
@@ -60,17 +45,16 @@ export default function JobsPage() {
     try {
       const remoteJobs = await fetchRemoteJobs(token);
       setJobs(remoteJobs);
+      setLoadMessage(null);
       setLastPolledAt(new Date());
     } catch {
-      setJobs((currentJobs) => pollJobStatuses(currentJobs));
+      setJobs([]);
+      setLoadMessage("Unable to load jobs from the backend.");
       setLastPolledAt(new Date());
     }
   };
 
-  const isPollingActive = useMemo(
-    () => jobs.some((job) => job.status === "queued" || job.status === "processing"),
-    [jobs]
-  );
+  const isPollingActive = useMemo(() => jobs.some((job) => job.status === "queued" || job.status === "processing"), [jobs]);
 
   useEffect(() => {
     const token = localStorage.getItem("document-genie-token");
@@ -108,6 +92,21 @@ export default function JobsPage() {
         Track the status of your document processing jobs. Last checked at {lastPolledAt.toLocaleTimeString()}.
       </p>
 
+      {loadMessage && (
+        <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          {loadMessage}
+        </div>
+      )}
+
+      {jobs.length === 0 ? (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <FileText aria-hidden="true" className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
+            <h3 className="text-base font-semibold">No live jobs yet</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Upload a document to see backend job status here.</p>
+          </CardContent>
+        </Card>
+      ) : (
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -169,6 +168,7 @@ export default function JobsPage() {
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

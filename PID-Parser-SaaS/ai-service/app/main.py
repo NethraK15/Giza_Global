@@ -50,6 +50,11 @@ ARTIFACTS_DIR = os.path.abspath(settings.ARTIFACTS_PATH)
 os.makedirs(ARTIFACTS_DIR, exist_ok=True)
 app.mount("/artifacts", StaticFiles(directory=ARTIFACTS_DIR), name="artifacts")
 
+# Serve parser-generated static files (model overlays, CSV) from giza pipeline
+STATIC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "static"))
+os.makedirs(STATIC_DIR, exist_ok=True)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 # Global exception handler — surfaces exact error for debugging
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

@@ -5,10 +5,16 @@ import logging
 import numpy as np
 import cv2
 from typing import Dict, Any
+from dotenv import load_dotenv
+
+# Load ai-service environment first so MODEL_DIR can point at the real model weights
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+AI_SERVICE_ROOT = os.path.dirname(os.path.dirname(CURRENT_DIR))
+load_dotenv(os.path.join(AI_SERVICE_ROOT, ".env"))
+os.environ.setdefault("MODEL_DIR", os.path.join(AI_SERVICE_ROOT, "models", "yolo_weights"))
 
 # Ensure the cloned giza-pidparser directory is available to our Python path
 # This directly satisfies the Roadmap criteria to use ONLY giza-pidparser code
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
 GIZA_REPO_SRC = os.path.join(PROJECT_ROOT, "giza-pidparser", "app", "ai-service", "src")
 if GIZA_REPO_SRC not in sys.path:
@@ -31,10 +37,15 @@ class PIDParserEngine:
     """
     
     def __init__(self):
-        self.giza_ready = GIZA_AVAILABLE
+        self.giza_ready = GIZA_AVAILABLE and self._models_available()
         # Setup static paths that giza-pidparser inherently relies upon internally
         os.makedirs("app/static", exist_ok=True)
         os.makedirs("pid_parser", exist_ok=True)
+
+    def _models_available(self) -> bool:
+        model_dir = os.environ.get("MODEL_DIR", os.path.join(AI_SERVICE_ROOT, "models", "yolo_weights"))
+        required_models = ["model1_best.pt", "model2_best.pt", "model3_best.pt"]
+        return all(os.path.exists(os.path.join(model_dir, model_name)) for model_name in required_models)
 
     @property
     def models_loaded(self) -> bool:

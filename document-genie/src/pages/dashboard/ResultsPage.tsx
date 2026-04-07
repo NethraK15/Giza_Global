@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ResultArtifact, mockResults } from "@/data/mockData";
+import { ResultArtifact } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -28,13 +28,20 @@ type BackendResult = {
   fields: ResultField[];
   artifactLinks?: ArtifactLink[];
   success?: boolean;
+  warning?: string;
+  result?: {
+    warning?: string;
+    detections?: Array<{ model_source?: string }>;
+  };
 };
 
 type DisplayResult = ResultArtifact & {
   artifactLinks?: ArtifactLink[];
+  warning?: string;
+  result?: BackendResult["result"];
 };
 
-const API_BASE_URL = "http://localhost:4000";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "http://localhost:4000";
 
 const triggerDownload = (content: BlobPart, fileName: string, type: string) => {
   const blob = new Blob([content], { type });
@@ -55,7 +62,8 @@ const toCsv = (rows: Array<{ key: string; value: string; confidence: number }>) 
 };
 
 export default function ResultsPage() {
-  const [results, setResults] = useState<DisplayResult[]>(mockResults);
+  const [results, setResults] = useState<DisplayResult[]>([]);
+  const [loadMessage, setLoadMessage] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const selected = results.find((r) => r.jobId === selectedJob);
 
@@ -67,11 +75,16 @@ export default function ResultsPage() {
     graphHtml: payload.graphHtml || "<html><body></body></html>",
     fields: payload.fields || [],
     artifactLinks: payload.artifactLinks || [],
+    warning: payload.warning || payload.result?.warning,
+    result: payload.result,
   });
 
   useEffect(() => {
     const token = localStorage.getItem("document-genie-token");
-    if (!token) return;
+    if (!token) {
+      setLoadMessage("Sign in to see parsed results.");
+      return;
+    }
 
     const loadResults = async () => {
       try {
@@ -107,9 +120,12 @@ export default function ResultsPage() {
         const filtered = loaded.filter((item): item is ResultArtifact => Boolean(item));
         if (filtered.length > 0) {
           setResults(filtered);
+          setLoadMessage(null);
+        } else {
+          setLoadMessage("No completed jobs are available yet.");
         }
       } catch {
-        // Keep local fallback data if backend is unavailable.
+        setLoadMessage("Unable to load results from the backend.");
       }
     };
 
@@ -128,8 +144,8 @@ export default function ResultsPage() {
             <div className="bg-muted rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-5">
               <Inbox className="h-7 w-7 text-muted-foreground" />
             </div>
-            <h3 className="font-semibold text-base mb-1">No results yet</h3>
-            <p className="text-sm text-muted-foreground">Upload and process a document to see results here.</p>
+            <h3 className="font-semibold text-base mb-1">{loadMessage ? "No live results" : "No results yet"}</h3>
+            <p className="text-sm text-muted-foreground">{loadMessage || "Upload and process a document to see results here."}</p>
           </CardContent>
         </Card>
       </div>
@@ -200,6 +216,11 @@ export default function ResultsPage() {
                     </Button>
                   </div>
                 </CardHeader>
+                {(selected.warning || selected.result?.detections?.some((detection) => detection.model_source === 'fallback')) ? (
+                  <div className="mx-6 mb-4 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
+                    This result was produced by the backend fallback path, not the live AI service.
+                  </div>
+                ) : null}
                 <CardContent>
                   <div className="space-y-5">
                     <div className="grid lg:grid-cols-2 gap-4">

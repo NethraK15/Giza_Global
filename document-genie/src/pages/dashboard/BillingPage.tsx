@@ -2,12 +2,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { UsageData, mockUsage } from "@/data/mockData";
+import { UsageData } from "@/data/mockData";
 import { CheckCircle2, AlertTriangle, Sparkles, Receipt, Crown } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "http://localhost:4000";
+
+const emptyUsage: UsageData = {
+  used: 0,
+  limit: 0,
+  plan: "free",
+  window: "monthly",
+};
 
 const invoices = [
   { id: "INV-001", date: "Mar 1, 2026", amount: "$0.00", status: "Paid" },
@@ -15,7 +22,7 @@ const invoices = [
 ];
 
 export default function BillingPage() {
-  const [usage, setUsage] = useState<UsageData>(mockUsage);
+  const [usage, setUsage] = useState<UsageData>(emptyUsage);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const usagePercent = useMemo(() => (usage.used / usage.limit) * 100, [usage]);
   const isOverQuota = usagePercent >= 90;

@@ -12,11 +12,36 @@ const configuredAiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8
 const AI_SERVICE_URL = /\/parse\/?$/i.test(configuredAiServiceUrl)
   ? configuredAiServiceUrl
   : `${configuredAiServiceUrl.replace(/\/$/, '')}/parse`;
+const AI_SERVICE_BASE_URL = AI_SERVICE_URL.replace(/\/parse\/?$/i, '');
+const AI_HEALTH_URL = `${AI_SERVICE_BASE_URL}/health`;
 const POLLING_INTERVAL = 3000; 
 const MAX_FILE_SIZE_MB = 5;
 const STORAGE_DIR = path.resolve(process.env.STORAGE_DIR || './storage');
 const SECRET_API_KEY = process.env.SECRET_API_KEY || 'pid-parser-internal-secret-2026';
 const FALLBACK_ON_AI_UNAVAILABLE = (process.env.FALLBACK_ON_AI_UNAVAILABLE || 'true').toLowerCase() === 'true';
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function waitForAiService(maxAttempts = 20, intervalMs = 2000) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await axios.get(AI_HEALTH_URL, { timeout: 5000 });
+      if (response.status >= 200 && response.status < 300) {
+        console.log(`[Worker] AI service is reachable at ${AI_HEALTH_URL}`);
+        return true;
+      }
+    } catch (error) {
+      const msg = (error && error.message) || 'Unknown error';
+      console.warn(`[Worker] Waiting for AI service (${attempt}/${maxAttempts}): ${msg}`);
+    }
+
+    if (attempt < maxAttempts) {
+      await wait(intervalMs);
+    }
+  }
+
+  return false;
+}
 
 const isAiUnavailableError = (error) => {
   const code = (error && error.code) || '';
@@ -58,6 +83,18 @@ const buildFallbackResult = (job) => {
 async function worker() {
   console.log(`[Worker] B3 Pipeline Runner: Fully Secured Mode Started...`);
   console.log(`[Worker] Storage Sandbox: ${STORAGE_DIR}`);
+  console.log(`[Worker] AI Parse Endpoint: ${AI_SERVICE_URL}`);
+
+  const aiReady = await waitForAiService();
+  if (!aiReady) {
+    console.error(`[Worker] AI service did not become ready at ${AI_HEALTH_URL}.`);
+    if (FALLBACK_ON_AI_UNAVAILABLE) {
+      console.warn('[Worker] Continuing in fallback mode because FALLBACK_ON_AI_UNAVAILABLE=true.');
+    } else {
+      console.error('[Worker] Exiting because FALLBACK_ON_AI_UNAVAILABLE=false and AI is unavailable.');
+      throw new Error(`AI service unavailable at ${AI_HEALTH_URL}`);
+    }
+  }
   
   while (true) {
     try {

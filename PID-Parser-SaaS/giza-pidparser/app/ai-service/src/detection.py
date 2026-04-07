@@ -153,10 +153,26 @@ def divide_image25(image_path):
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
+
+def _resolve_model_path(filename):
+    configured_model_dir = os.environ.get('MODEL_DIR')
+    candidate_dirs = []
+    if configured_model_dir:
+        candidate_dirs.append(os.path.abspath(configured_model_dir))
+    candidate_dirs.append(os.path.abspath(os.path.join(script_dir, '..', 'model', 'yolo_weights')))
+
+    for candidate_dir in candidate_dirs:
+        candidate_path = os.path.join(candidate_dir, filename)
+        if os.path.exists(candidate_path):
+            return candidate_path
+
+    return os.path.join(candidate_dirs[0], filename)
+
+
 # Define paths to YOLO models
-model1_path = os.path.join(script_dir, '..', 'model', 'yolo_weights', 'model1_best.pt')
-model2_path = os.path.join(script_dir, '..', 'model', 'yolo_weights', 'model2_best.pt')  # Update if needed
-model3_path = os.path.join(script_dir, '..', 'model', 'yolo_weights', 'model3_best.pt')  # Update if needed
+model1_path = _resolve_model_path('model1_best.pt')
+model2_path = _resolve_model_path('model2_best.pt')
+model3_path = _resolve_model_path('model3_best.pt')
 
 # Load each YOLO model separately
 model1 = YOLO(model1_path)
