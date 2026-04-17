@@ -68,7 +68,8 @@ describe("frontend critical path coverage", () => {
   it("status polling: queued jobs progress when polling runs", async () => {
     render(<JobsPage />);
 
-    expect(screen.getByText(/job status/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /job status/i })).toBeInTheDocument();
+    expect(screen.getByText(/no live jobs yet/i)).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.queryByText("Queued")).not.toBeInTheDocument();
@@ -76,9 +77,42 @@ describe("frontend critical path coverage", () => {
   });
 
   it("results rendering: shows selected result details and graph panel", async () => {
+    localStorage.setItem("document-genie-token", "token-abc");
+
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/jobs")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            jobs: [{ id: "job-001", status: "completed" }],
+          }),
+        });
+      }
+
+      if (url.includes("/api/jobs/job-001/result")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            jobId: "job-001",
+            fileName: "invoice_march_2026.pdf",
+            inputPreviewUrl: "https://example.com/input.png",
+            overlayImageUrl: "https://example.com/overlay.png",
+            graphHtml: "<html><body><p>Graph content</p></body></html>",
+            fields: [{ key: "Vendor", value: "Acme Corp", confidence: 0.98 }],
+          }),
+        });
+      }
+
+      return Promise.resolve({ ok: false, json: async () => ({}) });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
     render(<ResultsPage />);
 
-    fireEvent.click(screen.getByRole("button", { name: /invoice_march_2026\.pdf/i }));
+    const jobButton = await screen.findByRole("button", { name: /invoice_march_2026\.pdf/i });
+    fireEvent.click(jobButton);
 
     expect(screen.getByText(/graph panel/i)).toBeInTheDocument();
     expect(screen.getByText(/vendor/i)).toBeInTheDocument();
