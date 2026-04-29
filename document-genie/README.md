@@ -66,6 +66,11 @@ After the build completes, deploy the contents of `dist/` to your static host of
 - `npm run test`: Run the Vitest suite
 - `npm run test:watch`: Run tests in watch mode
 
+## Demo Help
+
+- [SaaS admin/demo guide](SAAS_ADMIN_DEMO_GUIDE.md)
+- [.env.example](.env.example)
+
 ## Key Local Storage Keys
 
 - `document-genie-token`: Auth token stored after login/signup
