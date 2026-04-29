@@ -264,7 +264,6 @@ const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(process
 
 if (isDirectRun) {
   app.listen(port, () => {
-    // eslint-disable-next-line no-console
     console.log(`Mock API server running at http://localhost:${port}`);
   });
 }
