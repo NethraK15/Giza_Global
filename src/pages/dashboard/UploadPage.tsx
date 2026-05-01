@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, CheckCircle2, AlertCircle, Loader2, CloudUpload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
-import { getApiUrl, getAuthHeaders, API_ENDPOINTS } from "@/lib/api-config";
+import { getApiUrl, API_ENDPOINTS } from "@/lib/api-config";
+import { formatUsageLabel, isUsageLimitExceeded, useBilling } from "@/hooks/use-billing";
 
 type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
 
@@ -19,6 +20,7 @@ export default function UploadPage() {
   const [progress, setProgress] = useState(0);
   const [validationError, setValidationError] = useState("");
   const [createdJobId, setCreatedJobId] = useState<string | null>(null);
+  const { billing, loading: billingLoading, updateUsage, refetch } = useBilling();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const simulateProgress = () => {
@@ -43,7 +45,7 @@ export default function UploadPage() {
     return null;
   };
 
-  const startUpload = (file: File) => {
+  const startUpload = async (file: File) => {
     setValidationError("");
     setCreatedJobId(null);
     setState("uploading");
@@ -63,31 +65,44 @@ export default function UploadPage() {
     const formData = new FormData();
     formData.append("file", file);
 
-    fetch(getApiUrl(API_ENDPOINTS.UPLOAD), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || "Upload failed");
-        }
-        return data;
-      })
-      .then((data) => {
-        setCreatedJobId(data.jobId);
-        clearInterval(interval);
-        setProgress(100);
-        setState("success");
-      })
-      .catch((err) => {
-        clearInterval(interval);
-        setState("error");
-        setValidationError(err instanceof Error ? err.message : "Upload failed");
+    try {
+      const res = await fetch(getApiUrl(API_ENDPOINTS.UPLOAD), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
       });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (data?.usage) {
+          updateUsage(data.usage);
+        }
+
+        if (res.status === 429) {
+          throw new Error("Upload limit reached. Please wait for your quota to reset or upgrade your plan.");
+        }
+
+        throw new Error(data.error || "Upload failed");
+      }
+
+      if (data?.usage) {
+        updateUsage(data.usage);
+      }
+
+      setCreatedJobId(data.jobId);
+      clearInterval(interval);
+      setProgress(100);
+      setState("success");
+
+      // Keep usage in sync across all dashboard pages.
+      void refetch();
+    } catch (err) {
+      clearInterval(interval);
+      setState("error");
+      setValidationError(err instanceof Error ? err.message : "Upload failed");
+    }
   };
 
   const processSelectedFile = (file: File | undefined) => {
@@ -99,6 +114,14 @@ export default function UploadPage() {
       setState("error");
       return;
     }
+
+    if (billing && isUsageLimitExceeded(billing.usage)) {
+      setFileName(file.name);
+      setState("error");
+      setValidationError("Upload limit reached. Please wait for your quota to reset or upgrade your plan.");
+      return;
+    }
+
     startUpload(file);
   };
 
@@ -137,6 +160,9 @@ export default function UploadPage() {
       <div>
         <h1 className="text-2xl font-bold">Upload Document</h1>
         <p className="text-muted-foreground text-sm">Upload a document for AI processing.</p>
+        {!billingLoading && billing && (
+          <p className="text-xs text-muted-foreground mt-1">Usage: {formatUsageLabel(billing.usage)}</p>
+        )}
       </div>
 
       <Card className="overflow-hidden">

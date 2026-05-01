@@ -8,6 +8,7 @@ export interface BillingData {
     used: number;
     limit: number;
     window: "daily" | "monthly";
+    periodStart?: string;
   };
 }
 
@@ -18,6 +19,7 @@ interface UseBillingReturn {
   refetch: () => Promise<void>;
   upgrade: () => Promise<void>;
   upgrading: boolean;
+  updateUsage: (usage: BillingData["usage"]) => void;
 }
 
 const DEFAULT_BILLING: BillingData = {
@@ -27,8 +29,21 @@ const DEFAULT_BILLING: BillingData = {
     used: 0,
     limit: 5,
     window: "daily",
+    periodStart: new Date().toISOString().slice(0, 10),
   },
 };
+
+export function getUsageSuffix(window: BillingData["usage"]["window"]): string {
+  return window === "daily" ? "today" : "this month";
+}
+
+export function formatUsageLabel(usage: BillingData["usage"]): string {
+  return `${usage.used}/${usage.limit} ${getUsageSuffix(usage.window)}`;
+}
+
+export function isUsageLimitExceeded(usage: BillingData["usage"]): boolean {
+  return usage.used >= usage.limit;
+}
 
 /**
  * Validates that the API response contains all required billing fields.
@@ -68,6 +83,7 @@ function validateBillingResponse(data: unknown): BillingData {
       used: usage.used as number,
       limit: usage.limit as number,
       window: usage.window as "daily" | "monthly",
+      periodStart: typeof usage.periodStart === "string" ? usage.periodStart : undefined,
     },
   };
 }
@@ -200,6 +216,20 @@ export function useBilling(): UseBillingReturn {
     fetchBillingData();
   }, []);
 
+  const updateUsage = (usage: BillingData["usage"]) => {
+    setBilling((prev) => {
+      if (!prev) return prev;
+
+      const nextBilling = {
+        ...prev,
+        usage,
+      };
+
+      localStorage.setItem("document-genie-billing", JSON.stringify(nextBilling));
+      return nextBilling;
+    });
+  };
+
   return {
     billing,
     loading,
@@ -207,5 +237,6 @@ export function useBilling(): UseBillingReturn {
     refetch: fetchBillingData,
     upgrade: handleUpgrade,
     upgrading,
+    updateUsage,
   };
 }

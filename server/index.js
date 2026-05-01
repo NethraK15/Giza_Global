@@ -11,6 +11,8 @@ app.use(cors());
 app.use(express.json());
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const FREE_DAILY_LIMIT = 5;
+const PAID_MONTHLY_LIMIT = 1000;
 const allowedMimeTypes = new Set([
   "application/pdf",
   "image/jpeg",
@@ -34,13 +36,54 @@ const users = new Map();
 const jobs = new Map();
 const artifacts = new Map();
 
+const getPeriodStart = (window, nowMs = Date.now()) => {
+  const date = new Date(nowMs);
+
+  if (window === "daily") {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const getUsageConfigForPlan = (plan) => {
+  if (plan === "paid") {
+    return { limit: PAID_MONTHLY_LIMIT, window: "monthly" };
+  }
+
+  return { limit: FREE_DAILY_LIMIT, window: "daily" };
+};
+
+const ensureUsageState = (user) => {
+  const { limit, window } = getUsageConfigForPlan(user.plan);
+  const existingUsed = typeof user.usage?.used === "number" ? user.usage.used : 0;
+  const existingPeriodStart = typeof user.usage?.periodStart === "string" ? user.usage.periodStart : null;
+
+  user.usage = {
+    used: existingUsed,
+    limit,
+    window,
+    periodStart: existingPeriodStart || getPeriodStart(window),
+  };
+};
+
+const resetUsageIfNeeded = (user, nowMs = Date.now()) => {
+  ensureUsageState(user);
+
+  const currentPeriodStart = getPeriodStart(user.usage.window, nowMs);
+  if (user.usage.periodStart !== currentPeriodStart) {
+    user.usage.used = 0;
+    user.usage.periodStart = currentPeriodStart;
+  }
+};
+
 const demoUser = {
   id: "user-demo-1",
   name: "Demo User",
   email: "demo@giza.ai",
   password: "password123",
   plan: "free",
-  usage: { used: 2, limit: 5, window: "daily" },
+  usage: { used: 2, limit: FREE_DAILY_LIMIT, window: "daily", periodStart: getPeriodStart("daily") },
   subscriptionStatus: "active",
 };
 users.set(demoUser.email, demoUser);
@@ -109,7 +152,7 @@ app.post("/api/auth/signup", (req, res) => {
     email,
     password,
     plan: "free",
-    usage: { used: 0, limit: 5, window: "daily" },
+    usage: { used: 0, limit: FREE_DAILY_LIMIT, window: "daily", periodStart: getPeriodStart("daily") },
     subscriptionStatus: "active",
   };
   users.set(email, user);
@@ -136,6 +179,8 @@ app.post("/api/auth/forgot-password", (req, res) => {
 });
 
 app.get("/api/billing/subscription", authMiddleware, (req, res) => {
+  resetUsageIfNeeded(req.user);
+
   res.json({
     plan: req.user.plan,
     subscriptionStatus: req.user.subscriptionStatus,
@@ -151,7 +196,12 @@ app.post("/api/billing/upgrade", authMiddleware, (req, res) => {
   
   req.user.plan = "paid";
   req.user.subscriptionStatus = "active";
-  req.user.usage = { used: req.user.usage.used, limit: 1000, window: "monthly" };
+  req.user.usage = {
+    used: 0,
+    limit: PAID_MONTHLY_LIMIT,
+    window: "monthly",
+    periodStart: getPeriodStart("monthly"),
+  };
   
   res.status(200).json({
     success: true,
@@ -163,12 +213,18 @@ app.post("/api/billing/upgrade", authMiddleware, (req, res) => {
 });
 
 app.post("/api/upload", authMiddleware, upload.single("file"), (req, res) => {
+  resetUsageIfNeeded(req.user);
+
   if (!req.file) {
     res.status(400).json({ error: "No file uploaded" });
     return;
   }
+
   if (req.user.usage.used >= req.user.usage.limit) {
-    res.status(429).json({ error: "Upload quota exceeded for current plan" });
+    res.status(429).json({
+      error: "Upload quota exceeded for current plan",
+      usage: req.user.usage,
+    });
     return;
   }
 

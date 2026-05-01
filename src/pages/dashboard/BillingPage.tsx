@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, AlertTriangle, Sparkles, Receipt, Crown, AlertCircle, Loader2, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
-import { useBilling } from "@/hooks/use-billing";
+import { formatUsageLabel, getUsageSuffix, useBilling } from "@/hooks/use-billing";
 
 const invoices = [
   { id: "INV-001", date: "Mar 1, 2026", amount: "$20.00", status: "Paid" },
@@ -24,6 +24,7 @@ export default function BillingPage() {
   const isOverQuota = usagePercent >= 90;
   const planTitle = billing?.plan === "paid" ? "Paid Plan" : "Free Plan";
   const planPrice = billing?.plan === "paid" ? "$20/month" : "$0/month";
+  const usageLabel = billing ? formatUsageLabel(billing.usage) : "0/0 today";
 
   const handleUpgradeClick = useCallback(async () => {
     setUpgradeError(null);
@@ -132,8 +133,8 @@ export default function BillingPage() {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Usage this {billing?.usage.window}</span>
-                  <span className="font-semibold">{billing?.usage.used}/{billing?.usage.limit}</span>
+                  <span className="text-muted-foreground">Usage {billing ? getUsageSuffix(billing.usage.window) : "today"}</span>
+                  <span className="font-semibold">{usageLabel}</span>
                 </div>
                 <Progress value={usagePercent} className="h-2.5 rounded-full" />
               </div>

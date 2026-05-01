@@ -5,7 +5,7 @@ import { mockJobs } from "@/data/mockData";
 import { Upload, CheckCircle2, Clock, AlertTriangle, ArrowRight, FileText, TrendingUp, Activity, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
-import { useBilling } from "@/hooks/use-billing";
+import { formatUsageLabel, getUsageSuffix, useBilling } from "@/hooks/use-billing";
 
 export default function DashboardOverview() {
   const { billing, loading, error } = useBilling();
@@ -17,6 +17,7 @@ export default function DashboardOverview() {
   const usageUsed = billing?.usage.used ?? 0;
   const usageLimit = billing?.usage.limit ?? 0;
   const usagePercent = usageLimit > 0 ? (usageUsed / usageLimit) * 100 : 0;
+  const usageLabel = billing ? formatUsageLabel(billing.usage) : "0/0 today";
 
   const stats = [
     { label: "Total Jobs", value: mockJobs.length, icon: Activity, trend: "+12%", color: "text-foreground" },
@@ -65,7 +66,7 @@ export default function DashboardOverview() {
             </div>
             <div>
               <p className="text-sm font-semibold text-primary-foreground">
-                You've used {usageUsed} of {usageLimit} uploads this {billing?.usage.window}
+                You've used {usageLabel}
               </p>
               <p className="text-xs text-primary-foreground/60 mt-0.5">Upgrade for more capacity</p>
             </div>
@@ -111,13 +112,13 @@ export default function DashboardOverview() {
         <CardContent>
           <div className="flex items-center justify-between text-sm mb-3">
             <span className="text-muted-foreground">
-              {loading ? "Loading..." : `${usageUsed} of ${usageLimit} uploads used`}
+              {loading ? "Loading..." : usageLabel}
             </span>
             <span className="font-semibold">{Math.round(usagePercent)}%</span>
           </div>
           <Progress value={usagePercent} className="h-2.5 rounded-full" />
           <p className="text-xs text-muted-foreground mt-3">
-            Plan: {loading ? "Loading..." : billing?.plan.charAt(0).toUpperCase() + billing?.plan.slice(1)} · Resets {billing?.usage.window}
+            Plan: {loading ? "Loading..." : billing?.plan.charAt(0).toUpperCase() + billing?.plan.slice(1)} · Resets {billing ? getUsageSuffix(billing.usage.window) : "today"}
           </p>
         </CardContent>
       </Card>
