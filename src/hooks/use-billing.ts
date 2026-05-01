@@ -29,6 +29,99 @@ const DEFAULT_BILLING: BillingData = {
   },
 };
 
+const API_BASE_URL = "http://localhost:4000";
+
+/**
+ * Validates that the API response contains all required billing fields.
+ */
+function validateBillingResponse(data: unknown): BillingData {
+  if (!data || typeof data !== "object") {
+    throw new Error("Invalid response format from server");
+  }
+
+  const billing = data as Record<string, unknown>;
+
+  if (typeof billing.plan !== "string" || !["free", "paid"].includes(billing.plan)) {
+    throw new Error("Invalid plan in response");
+  }
+
+  if (typeof billing.subscriptionStatus !== "string" || !["active", "inactive"].includes(billing.subscriptionStatus)) {
+    throw new Error("Invalid subscription status in response");
+  }
+
+  if (!billing.usage || typeof billing.usage !== "object") {
+    throw new Error("Invalid usage data in response");
+  }
+
+  const usage = billing.usage as Record<string, unknown>;
+  if (typeof usage.used !== "number" || typeof usage.limit !== "number" || typeof usage.window !== "string") {
+    throw new Error("Invalid usage fields in response");
+  }
+
+  if (!["daily", "monthly"].includes(usage.window)) {
+    throw new Error("Invalid usage window in response");
+  }
+
+  return {
+    plan: billing.plan as "free" | "paid",
+    subscriptionStatus: billing.subscriptionStatus as "active" | "inactive",
+    usage: {
+      used: usage.used as number,
+      limit: usage.limit as number,
+      window: usage.window as "daily" | "monthly",
+    },
+  };
+}
+
+/**
+ * Makes an authenticated API request to the billing service.
+ */
+async function billingApiCall(
+  endpoint: string,
+  options: {
+    method?: "GET" | "POST";
+    token: string | null;
+  }
+): Promise<BillingData> {
+  if (!options.token) {
+    throw new Error("Not authenticated. Please log in to view billing information.");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/billing${endpoint}`, {
+    method: options.method || "GET",
+    headers: {
+      Authorization: `Bearer ${options.token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = "Failed to communicate with billing service";
+    try {
+      const data = await response.json();
+      errorMessage = data.error || data.message || errorMessage;
+    } catch {
+      // Fallback to status text if JSON parsing fails
+      errorMessage = response.statusText || errorMessage;
+    }
+
+    if (response.status === 401) {
+      errorMessage = "Authentication failed. Please log in again.";
+    } else if (response.status === 409) {
+      errorMessage = "You are already on a paid plan.";
+    } else if (response.status === 429) {
+      errorMessage = "Too many requests. Please wait before retrying.";
+    } else if (response.status >= 500) {
+      errorMessage = "Server error. Please try again later.";
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  const data = await response.json();
+  return validateBillingResponse(data);
+}
+
 export function useBilling(): UseBillingReturn {
   const [billing, setBilling] = useState<BillingData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,41 +130,41 @@ export function useBilling(): UseBillingReturn {
 
   const fetchBillingData = async () => {
     const token = localStorage.getItem("document-genie-token");
-    if (!token) {
-      // No token, use default billing data
-      setBilling(DEFAULT_BILLING);
-      setLoading(false);
-      return;
-    }
 
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("http://localhost:4000/api/billing/subscription", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to load billing information");
+      // If no token, use defaults and exit early
+      if (!token) {
+        setBilling(DEFAULT_BILLING);
+        setLoading(false);
+        return;
       }
 
-      const data: BillingData = await response.json();
+      // Fetch real billing data from API
+      const data = await billingApiCall("/subscription", { token });
       setBilling(data);
+
+      // Update cache
       localStorage.setItem("document-genie-billing", JSON.stringify(data));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load billing information";
       setError(errorMessage);
-      
-      // Fallback to cached data or defaults
+
+      // Try to restore from cache
       const cached = localStorage.getItem("document-genie-billing");
       if (cached) {
         try {
-          setBilling(JSON.parse(cached));
+          const cachedData = JSON.parse(cached);
+          validateBillingResponse(cachedData);
+          setBilling(cachedData);
         } catch {
+          // Cache is invalid, use defaults
           setBilling(DEFAULT_BILLING);
         }
       } else {
+        // No cache available, use defaults
         setBilling(DEFAULT_BILLING);
       }
     } finally {
@@ -81,29 +174,25 @@ export function useBilling(): UseBillingReturn {
 
   const handleUpgrade = async () => {
     const token = localStorage.getItem("document-genie-token");
-    if (!token) {
-      setError("Not authenticated");
+
+    // Prevent upgrade if already on paid plan
+    if (billing?.plan === "paid") {
+      setError("You are already on a paid plan");
       return;
     }
 
     try {
       setUpgrading(true);
       setError(null);
-      const response = await fetch("http://localhost:4000/api/billing/upgrade", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Upgrade failed");
-      }
-
-      const data: BillingData = await response.json();
+      // Make upgrade API call
+      const data = await billingApiCall("/upgrade", { method: "POST", token });
       setBilling(data);
+
+      // Update cache
       localStorage.setItem("document-genie-billing", JSON.stringify(data));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Upgrade failed";
+      const errorMessage = err instanceof Error ? err.message : "Upgrade failed. Please try again.";
       setError(errorMessage);
       throw err;
     } finally {

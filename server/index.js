@@ -144,12 +144,20 @@ app.get("/api/billing/subscription", authMiddleware, (req, res) => {
 });
 
 app.post("/api/billing/upgrade", authMiddleware, (req, res) => {
+  if (req.user.plan === "paid") {
+    res.status(400).json({ error: "User is already on a paid plan" });
+    return;
+  }
+  
   req.user.plan = "paid";
   req.user.subscriptionStatus = "active";
   req.user.usage = { used: req.user.usage.used, limit: 1000, window: "monthly" };
-  res.json({
-    message: "Upgraded to paid plan",
+  
+  res.status(200).json({
+    success: true,
+    message: "Successfully upgraded to paid plan",
     plan: req.user.plan,
+    subscriptionStatus: req.user.subscriptionStatus,
     usage: req.user.usage,
   });
 });

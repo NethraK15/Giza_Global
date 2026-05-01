@@ -1,19 +1,20 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, AlertTriangle, Sparkles, Receipt, Crown, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Sparkles, Receipt, Crown, AlertCircle, Loader2, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import { useBilling } from "@/hooks/use-billing";
 
 const invoices = [
-  { id: "INV-001", date: "Mar 1, 2026", amount: "$0.00", status: "Paid" },
+  { id: "INV-001", date: "Mar 1, 2026", amount: "$20.00", status: "Paid" },
   { id: "INV-002", date: "Feb 1, 2026", amount: "$0.00", status: "Paid" },
 ];
 
 export default function BillingPage() {
-  const { billing, loading, error, upgrade, upgrading } = useBilling();
+  const { billing, loading, error, upgrade, upgrading, refetch } = useBilling();
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
+  const [upgradeSuccess, setUpgradeSuccess] = useState(false);
 
   const usagePercent = useMemo(() => {
     if (!billing) return 0;
@@ -24,14 +25,19 @@ export default function BillingPage() {
   const planTitle = billing?.plan === "paid" ? "Paid Plan" : "Free Plan";
   const planPrice = billing?.plan === "paid" ? "$20/month" : "$0/month";
 
-  const handleUpgradeClick = async () => {
+  const handleUpgradeClick = useCallback(async () => {
     setUpgradeError(null);
+    setUpgradeSuccess(false);
     try {
       await upgrade();
+      setUpgradeSuccess(true);
+      // Clear success message after 3 seconds
+      setTimeout(() => setUpgradeSuccess(false), 3000);
     } catch (err) {
-      setUpgradeError(err instanceof Error ? err.message : "Upgrade failed");
+      const message = err instanceof Error ? err.message : "Upgrade failed. Please try again.";
+      setUpgradeError(message);
     }
-  };
+  }, [upgrade]);
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -40,7 +46,7 @@ export default function BillingPage() {
         <p className="text-muted-foreground text-sm">Manage your plan and billing details.</p>
       </div>
 
-      {/* Error state */}
+      {/* Initial load error state */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -48,9 +54,28 @@ export default function BillingPage() {
           className="bg-destructive/10 border border-destructive/20 rounded-2xl p-5 flex items-start gap-3"
         >
           <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-semibold text-destructive">Failed to load billing information</p>
             <p className="text-xs text-destructive/70 mt-0.5">{error}</p>
+            <Button size="sm" variant="ghost" className="mt-3 text-xs h-7 px-2" onClick={() => refetch()}>
+              <RotateCcw className="mr-1 h-3 w-3" /> Retry
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Upgrade success state */}
+      {upgradeSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="bg-success/10 border border-success/20 rounded-2xl p-5 flex items-start gap-3"
+        >
+          <CheckCircle2 className="h-5 w-5 text-success mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-success">Successfully upgraded to Paid Plan!</p>
+            <p className="text-xs text-success/70 mt-0.5">Your plan now includes 1000 uploads/month and higher queue priority.</p>
           </div>
         </motion.div>
       )}
@@ -142,6 +167,36 @@ export default function BillingPage() {
               </div>
             </motion.div>
           )}
+
+          {/* Plan comparison */}
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Plan Features</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 py-2">
+                  <CheckCircle2 className="h-4 w-4 text-success mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Free: 5 files/day</p>
+                    <p className="text-xs text-muted-foreground">Perfect for getting started</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 py-2">
+                  <CheckCircle2 className="h-4 w-4 text-success mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Paid: 1000 files/month</p>
+                    <p className="text-xs text-muted-foreground">Higher queue priority, subscription management</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 py-2">
+                  <span className="text-xs font-medium text-muted-foreground mt-1">Max file size:</span>
+                  <div>
+                    <p className="text-sm font-medium">5 MB per file</p>
+                    <p className="text-xs text-muted-foreground">Hard limit enforced</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Billing history */}
           <Card>
