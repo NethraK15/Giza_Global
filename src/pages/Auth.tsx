@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileText, Mail, Lock, User, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { getApiUrl, API_ENDPOINTS } from "@/lib/api-config";
 
 const benefits = [
   "20 free document uploads per month",
@@ -44,10 +45,10 @@ export default function AuthPage() {
 
     const endpoint =
       activeTab === "signup"
-        ? "/api/auth/signup"
+        ? API_ENDPOINTS.AUTH.SIGNUP
         : activeTab === "forgot"
-          ? "/api/auth/forgot-password"
-          : "/api/auth/login";
+          ? API_ENDPOINTS.AUTH.FORGOT_PASSWORD
+          : API_ENDPOINTS.AUTH.LOGIN;
 
     const body =
       activeTab === "signup"
@@ -56,7 +57,7 @@ export default function AuthPage() {
           ? { email }
           : { email, password };
 
-    fetch(`http://localhost:4000${endpoint}`, {
+    fetch(getApiUrl(endpoint), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

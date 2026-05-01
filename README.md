@@ -104,9 +104,23 @@ http://localhost:5173
 - `/dashboard/results`
 - `/dashboard/billing`
 
+## Environment Variables
+
+The application uses environment variables for configuration. Create a `.env` file in the project root:
+
+```bash
+# Backend API base URL
+VITE_API_URL=http://localhost:4000  # For development
+# VITE_API_URL=https://api.example.com  # For production
+```
+
+See `.env.example` for all available options. The app will use sensible defaults if environment variables are missing.
+
 ## API Endpoints (Mock Backend)
 
-Base URL: `http://localhost:4000`
+The application communicates with a backend API. All endpoints are defined in `src/lib/api-config.ts`.
+
+Base URL (configured via `VITE_API_URL`): Default is `http://localhost:4000`
 
 ### Health
 

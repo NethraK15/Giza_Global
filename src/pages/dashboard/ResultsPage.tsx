@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FileSearch, Download, FileText, Inbox, Image as ImageIcon, Network, FileJson, FileSpreadsheet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { getApiUrl, getAuthHeaders, API_ENDPOINTS } from "@/lib/api-config";
 
 const triggerDownload = (content: BlobPart, fileName: string, type: string) => {
   const blob = new Blob([content], { type });
@@ -36,8 +37,8 @@ export default function ResultsPage() {
 
     const loadResults = async () => {
       try {
-        const jobsRes = await fetch("http://localhost:4000/api/jobs", {
-          headers: { Authorization: `Bearer ${token}` },
+        const jobsRes = await fetch(getApiUrl(API_ENDPOINTS.JOBS.LIST), {
+          headers: getAuthHeaders(token),
         });
         const jobsData = await jobsRes.json();
         if (!jobsRes.ok || !Array.isArray(jobsData.jobs)) return;
@@ -48,8 +49,8 @@ export default function ResultsPage() {
 
         const loaded = await Promise.all(
           completedIds.map(async (jobId: string) => {
-            const res = await fetch(`http://localhost:4000/api/jobs/${jobId}/result`, {
-              headers: { Authorization: `Bearer ${token}` },
+            const res = await fetch(getApiUrl(API_ENDPOINTS.JOBS.RESULT(jobId)), {
+              headers: getAuthHeaders(token),
             });
             const data = await res.json();
             return res.ok ? (data as ResultArtifact) : null;

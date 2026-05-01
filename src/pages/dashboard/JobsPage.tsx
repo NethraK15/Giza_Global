@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { FileText, MoreHorizontal, RefreshCcw } from "lucide-react";
 import { motion } from "framer-motion";
+import { getApiUrl, getAuthHeaders, API_ENDPOINTS } from "@/lib/api-config";
 
 const statusConfig: Record<Job["status"], { label: string; className: string; dot: string }> = {
   queued: { label: "Queued", className: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
@@ -35,8 +36,8 @@ const pollJobStatuses = (jobs: Job[]): Job[] =>
   });
 
 const fetchRemoteJobs = async (token: string): Promise<Job[]> => {
-  const response = await fetch("http://localhost:4000/api/jobs", {
-    headers: { Authorization: `Bearer ${token}` },
+  const response = await fetch(getApiUrl(API_ENDPOINTS.JOBS.LIST), {
+    headers: getAuthHeaders(token),
   });
   const data = await response.json();
   if (!response.ok) {

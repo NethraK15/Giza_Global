@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, CheckCircle2, AlertCircle, Loader2, CloudUpload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
+import { getApiUrl, getAuthHeaders, API_ENDPOINTS } from "@/lib/api-config";
 
 type UploadState = "idle" | "dragging" | "uploading" | "success" | "error";
 
@@ -62,9 +63,11 @@ export default function UploadPage() {
     const formData = new FormData();
     formData.append("file", file);
 
-    fetch("http://localhost:4000/api/upload", {
+    fetch(getApiUrl(API_ENDPOINTS.UPLOAD), {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       body: formData,
     })
       .then(async (res) => {

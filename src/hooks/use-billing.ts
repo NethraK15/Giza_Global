@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getApiUrl, getAuthHeaders, API_ENDPOINTS } from "@/lib/api-config";
 
 export interface BillingData {
   plan: "free" | "paid";
@@ -28,8 +29,6 @@ const DEFAULT_BILLING: BillingData = {
     window: "daily",
   },
 };
-
-const API_BASE_URL = "http://localhost:4000";
 
 /**
  * Validates that the API response contains all required billing fields.
@@ -87,12 +86,9 @@ async function billingApiCall(
     throw new Error("Not authenticated. Please log in to view billing information.");
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/billing${endpoint}`, {
+  const response = await fetch(getApiUrl(endpoint), {
     method: options.method || "GET",
-    headers: {
-      Authorization: `Bearer ${options.token}`,
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(options.token),
   });
 
   if (!response.ok) {
@@ -143,7 +139,7 @@ export function useBilling(): UseBillingReturn {
       }
 
       // Fetch real billing data from API
-      const data = await billingApiCall("/subscription", { token });
+      const data = await billingApiCall(API_ENDPOINTS.BILLING.SUBSCRIPTION, { token });
       setBilling(data);
 
       // Update cache
@@ -186,7 +182,7 @@ export function useBilling(): UseBillingReturn {
       setError(null);
 
       // Make upgrade API call
-      const data = await billingApiCall("/upgrade", { method: "POST", token });
+      const data = await billingApiCall(API_ENDPOINTS.BILLING.UPGRADE, { method: "POST", token });
       setBilling(data);
 
       // Update cache
