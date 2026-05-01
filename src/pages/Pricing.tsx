@@ -10,55 +10,39 @@ const plans = [
     name: "Free",
     monthlyPrice: 0,
     yearlyPrice: 0,
-    description: "Perfect for trying out Giza Global",
-    quota: "20 uploads/month",
+    description: "Perfect for trying out PID Parser",
+    quota: "5 files/day",
     features: [
-      { text: "20 document uploads/month", included: true },
-      { text: "Basic AI parsing", included: true },
+      { text: "Up to 5 files per day", included: true },
+      { text: "PID diagram parsing", included: true },
       { text: "JSON export", included: true },
-      { text: "Community support", included: true },
-      { text: "7-day result retention", included: true },
-      { text: "API access", included: false },
-      { text: "Custom field mapping", included: false },
+      { text: "CSV export", included: true },
+      { text: "Detection overlays", included: true },
+      { text: "Standard queue priority", included: true },
+      { text: "Higher queue priority", included: false },
+      { text: "Billing & subscription management", included: false },
     ],
     cta: "Get Started",
     popular: false,
   },
   {
-    name: "Pro",
-    monthlyPrice: 49,
-    yearlyPrice: 39,
-    description: "For teams processing documents daily",
-    quota: "500 uploads/month",
+    name: "Paid",
+    monthlyPrice: 20,
+    yearlyPrice: 240,
+    description: "For regular PID diagram processing",
+    quota: "1000 files/month",
     features: [
-      { text: "500 document uploads/month", included: true },
-      { text: "Advanced AI models", included: true },
-      { text: "CSV, JSON, XML export", included: true },
-      { text: "Priority support", included: true },
-      { text: "90-day result retention", included: true },
-      { text: "API access", included: true },
-      { text: "Custom field mapping", included: true },
+      { text: "Up to 1000 files per month", included: true },
+      { text: "PID diagram parsing", included: true },
+      { text: "JSON export", included: true },
+      { text: "CSV export", included: true },
+      { text: "Detection overlays", included: true },
+      { text: "Standard queue priority", included: true },
+      { text: "Higher queue priority", included: true },
+      { text: "Billing & subscription management", included: true },
     ],
-    cta: "Start Pro Trial",
+    cta: "Start Subscription",
     popular: true,
-  },
-  {
-    name: "Enterprise",
-    monthlyPrice: 199,
-    yearlyPrice: 159,
-    description: "For high-volume processing needs",
-    quota: "Unlimited uploads",
-    features: [
-      { text: "Unlimited uploads", included: true },
-      { text: "Custom AI model training", included: true },
-      { text: "All export formats", included: true },
-      { text: "Dedicated support & SLA", included: true },
-      { text: "Unlimited retention", included: true },
-      { text: "Full API access", included: true },
-      { text: "SSO & RBAC", included: true },
-    ],
-    cta: "Contact Sales",
-    popular: false,
   },
 ];
 
@@ -121,7 +105,7 @@ export default function PricingPage() {
           </motion.div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {plans.map((plan, i) => {
             const price = yearly ? plan.yearlyPrice : plan.monthlyPrice;
             return (
@@ -180,6 +164,26 @@ export default function PricingPage() {
             );
           })}
         </div>
+
+        {/* File Upload Specifications */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-16 max-w-2xl mx-auto bg-card rounded-2xl border p-8"
+        >
+          <h3 className="text-lg font-semibold mb-4">File Upload Specifications</h3>
+          <div className="grid md:grid-cols-2 gap-6 text-sm">
+            <div>
+              <p className="text-muted-foreground mb-2">Max File Size</p>
+              <p className="font-semibold">5 MB per file (hard limit)</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-2">Allowed File Types</p>
+              <p className="font-semibold">PDF, JPG, JPEG, PNG</p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
