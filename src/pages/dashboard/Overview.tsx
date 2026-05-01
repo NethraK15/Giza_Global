@@ -1,16 +1,22 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockJobs, mockUsage } from "@/data/mockData";
-import { Upload, CheckCircle2, Clock, AlertTriangle, ArrowRight, FileText, TrendingUp, Activity } from "lucide-react";
+import { mockJobs } from "@/data/mockData";
+import { Upload, CheckCircle2, Clock, AlertTriangle, ArrowRight, FileText, TrendingUp, Activity, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
+import { useBilling } from "@/hooks/use-billing";
 
 export default function DashboardOverview() {
+  const { billing, loading, error } = useBilling();
+  
   const completed = mockJobs.filter((j) => j.status === "completed").length;
   const processing = mockJobs.filter((j) => j.status === "processing" || j.status === "queued").length;
   const failed = mockJobs.filter((j) => j.status === "failed").length;
-  const usagePercent = (mockUsage.used / mockUsage.limit) * 100;
+  
+  const usageUsed = billing?.usage.used ?? 0;
+  const usageLimit = billing?.usage.limit ?? 0;
+  const usagePercent = usageLimit > 0 ? (usageUsed / usageLimit) * 100 : 0;
 
   const stats = [
     { label: "Total Jobs", value: mockJobs.length, icon: Activity, trend: "+12%", color: "text-foreground" },
@@ -31,8 +37,23 @@ export default function DashboardOverview() {
         </Button>
       </div>
 
+      {/* Error state */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-destructive/10 border border-destructive/20 rounded-2xl p-5 flex items-start gap-3"
+        >
+          <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-destructive">Failed to load billing information</p>
+            <p className="text-xs text-destructive/70 mt-0.5">{error}</p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Quota warning */}
-      {usagePercent > 60 && (
+      {!loading && !error && usagePercent > 60 && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -44,7 +65,7 @@ export default function DashboardOverview() {
             </div>
             <div>
               <p className="text-sm font-semibold text-primary-foreground">
-                You've used {mockUsage.used} of {mockUsage.limit} uploads this month
+                You've used {usageUsed} of {usageLimit} uploads this {billing?.usage.window}
               </p>
               <p className="text-xs text-primary-foreground/60 mt-0.5">Upgrade for more capacity</p>
             </div>
@@ -86,14 +107,18 @@ export default function DashboardOverview() {
 
       {/* Usage */}
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Monthly Usage</CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">{billing?.usage.window === "daily" ? "Daily" : "Monthly"} Usage</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-center justify-between text-sm mb-3">
-            <span className="text-muted-foreground">{mockUsage.used} of {mockUsage.limit} uploads used</span>
+            <span className="text-muted-foreground">
+              {loading ? "Loading..." : `${usageUsed} of ${usageLimit} uploads used`}
+            </span>
             <span className="font-semibold">{Math.round(usagePercent)}%</span>
           </div>
           <Progress value={usagePercent} className="h-2.5 rounded-full" />
-          <p className="text-xs text-muted-foreground mt-3">Plan: {mockUsage.plan.charAt(0).toUpperCase() + mockUsage.plan.slice(1)} · Resets monthly</p>
+          <p className="text-xs text-muted-foreground mt-3">
+            Plan: {loading ? "Loading..." : billing?.plan.charAt(0).toUpperCase() + billing?.plan.slice(1)} · Resets {billing?.usage.window}
+          </p>
         </CardContent>
       </Card>
 
