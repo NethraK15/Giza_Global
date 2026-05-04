@@ -43,9 +43,16 @@ export default function ResultsPage() {
         const jobsData = await jobsRes.json();
         if (!jobsRes.ok || !Array.isArray(jobsData.jobs)) return;
 
-        const completedIds = jobsData.jobs
-          .filter((job: { status: string }) => job.status === "completed")
-          .map((job: { id: string }) => job.id);
+        // Create a map of job IDs to their filenames
+        const jobFileNameMap = new Map<string, string>();
+        jobsData.jobs.forEach((job: { id: string; fileName: string }) => {
+          jobFileNameMap.set(job.id, job.fileName);
+        });
+
+        const completedJobs = jobsData.jobs.filter(
+          (job: { status: string }) => job.status === "completed"
+        );
+        const completedIds = completedJobs.map((job: { id: string }) => job.id);
 
         const loaded = await Promise.all(
           completedIds.map(async (jobId: string) => {
@@ -53,7 +60,15 @@ export default function ResultsPage() {
               headers: getAuthHeaders(token),
             });
             const data = await res.json();
-            return res.ok ? (data as ResultArtifact) : null;
+            if (res.ok) {
+              const result = data as ResultArtifact;
+              // Ensure fileName is set from the jobs list
+              if (!result.fileName && jobFileNameMap.has(jobId)) {
+                result.fileName = jobFileNameMap.get(jobId)!;
+              }
+              return result;
+            }
+            return null;
           })
         );
 

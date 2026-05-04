@@ -119,7 +119,7 @@ export default function BillingPage() {
                   </div>
                   <div>
                     <p className="text-xl font-bold">{planTitle}</p>
-                    <p className="text-sm text-muted-foreground">{billing?.usage.limit} uploads/{billing?.usage.window} · {planPrice}</p>
+                    <p className="text-sm text-muted-foreground">{billing?.usage.limit} files/{billing?.usage.window} · {planPrice}</p>
                   </div>
                 </div>
                 <Button 
@@ -152,7 +152,7 @@ export default function BillingPage() {
                 <AlertTriangle className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h3 className="font-semibold text-primary-foreground mb-1">You're running low on uploads</h3>
+                <h3 className="font-semibold text-primary-foreground mb-1">You're running low on files</h3>
                 <p className="text-sm text-primary-foreground/70 mb-4">
                   Upgrade to Paid $20/month for 1000 files/month, higher queue priority, and subscription management.
                 </p>
