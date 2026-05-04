@@ -1,18 +1,57 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockJobs } from "@/data/mockData";
-import { Upload, CheckCircle2, Clock, AlertTriangle, ArrowRight, FileText, TrendingUp, Activity, AlertCircle } from "lucide-react";
+import { Upload, CheckCircle2, Clock, AlertTriangle, ArrowRight, FileText, TrendingUp, Activity, AlertCircle, Inbox } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import { formatUsageLabel, getUsageSuffix, useBilling } from "@/hooks/use-billing";
+import { getApiUrl, getAuthHeaders, API_ENDPOINTS } from "@/lib/api-config";
+
+type DashboardJob = {
+  id: string;
+  fileName: string;
+  status: "queued" | "processing" | "completed" | "failed";
+  uploadedAt: string;
+};
 
 export default function DashboardOverview() {
   const { billing, loading, error } = useBilling();
-  
-  const completed = mockJobs.filter((j) => j.status === "completed").length;
-  const processing = mockJobs.filter((j) => j.status === "processing" || j.status === "queued").length;
-  const failed = mockJobs.filter((j) => j.status === "failed").length;
+  const [jobs, setJobs] = useState<DashboardJob[]>([]);
+  const [jobsLoaded, setJobsLoaded] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("document-genie-token");
+    if (!token) {
+      setJobs([]);
+      setJobsLoaded(true);
+      return;
+    }
+
+    const loadJobs = async () => {
+      try {
+        const response = await fetch(getApiUrl(API_ENDPOINTS.JOBS.LIST), {
+          headers: getAuthHeaders(token),
+        });
+        const data = await response.json();
+        if (response.ok && Array.isArray(data.jobs)) {
+          setJobs(data.jobs as DashboardJob[]);
+        } else {
+          setJobs([]);
+        }
+      } catch {
+        setJobs([]);
+      } finally {
+        setJobsLoaded(true);
+      }
+    };
+
+    void loadJobs();
+  }, []);
+
+  const completed = jobs.filter((j) => j.status === "completed").length;
+  const processing = jobs.filter((j) => j.status === "processing" || j.status === "queued").length;
+  const failed = jobs.filter((j) => j.status === "failed").length;
   
   const usageUsed = billing?.usage.used ?? 0;
   const usageLimit = billing?.usage.limit ?? 0;
@@ -20,8 +59,8 @@ export default function DashboardOverview() {
   const usageLabel = billing ? formatUsageLabel(billing.usage) : "0/0 today";
 
   const stats = [
-    { label: "Total Jobs", value: mockJobs.length, icon: Activity, trend: "+12%", color: "text-foreground" },
-    { label: "Completed", value: completed, icon: CheckCircle2, trend: "+8%", color: "text-success" },
+    { label: "Total Jobs", value: jobs.length, icon: Activity, trend: jobs.length > 0 ? "+12%" : "", color: "text-foreground" },
+    { label: "Completed", value: completed, icon: CheckCircle2, trend: completed > 0 ? "+8%" : "", color: "text-success" },
     { label: "In Progress", value: processing, icon: Clock, trend: "", color: "text-info" },
     { label: "Failed", value: failed, icon: AlertTriangle, trend: "", color: "text-destructive" },
   ];
@@ -132,22 +171,34 @@ export default function DashboardOverview() {
           </Button>
         </CardHeader>
         <CardContent className="p-3 sm:p-6">
-          <div className="space-y-1">
-            {mockJobs.slice(0, 4).map((job) => (
-              <div key={job.id} className="flex items-center justify-between py-2 sm:py-3 px-2 sm:px-3 rounded-lg hover:bg-muted/50 transition-colors gap-2">
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                  <div className="bg-muted rounded-lg p-1 sm:p-2 shrink-0">
-                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium truncate">{job.fileName}</p>
-                    <p className="text-xs text-muted-foreground hidden sm:block">{job.uploadedAt}</p>
-                  </div>
-                </div>
-                <StatusBadge status={job.status} />
+          {!jobsLoaded ? (
+            <div className="py-12 text-center text-sm text-muted-foreground">Loading recent uploads...</div>
+          ) : jobs.length === 0 ? (
+            <div className="py-12 text-center">
+              <div className="bg-muted rounded-2xl w-14 h-14 flex items-center justify-center mx-auto mb-4">
+                <Inbox className="h-6 w-6 text-muted-foreground" />
               </div>
-            ))}
-          </div>
+              <h3 className="font-semibold text-base mb-1">No uploads yet</h3>
+              <p className="text-sm text-muted-foreground">Upload a file to see it appear here.</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {jobs.slice(0, 4).map((job) => (
+                <div key={job.id} className="flex items-center justify-between py-2 sm:py-3 px-2 sm:px-3 rounded-lg hover:bg-muted/50 transition-colors gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="bg-muted rounded-lg p-1 sm:p-2 shrink-0">
+                      <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-medium truncate">{job.fileName}</p>
+                      <p className="text-xs text-muted-foreground hidden sm:block">{job.uploadedAt}</p>
+                    </div>
+                  </div>
+                  <StatusBadge status={job.status} />
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
