@@ -46,7 +46,7 @@ export default function HomePage() {
       {/* Hero */}
       <section className="gradient-hero text-primary-foreground overflow-hidden relative">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(221_83%_53%_/_0.15),_transparent_50%)]" />
-        <div className="container py-24 md:py-36 relative">
+        <div className="container py-20 sm:py-24 md:py-36 relative">
           <div className="max-w-4xl mx-auto text-center">
             <motion.div {...fadeUp} transition={{ duration: 0.5, delay: 0 }}>
               <div className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/5 px-4 py-1.5 text-sm text-primary-foreground/70 mb-8 backdrop-blur-sm">
@@ -89,9 +89,9 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5 }}
-            className="mt-16 md:mt-24 max-w-5xl mx-auto"
+            className="mt-16 md:mt-24 max-w-5xl mx-auto px-4 sm:px-0"
           >
-            <div className="rounded-2xl border border-primary-foreground/10 bg-primary-foreground/5 backdrop-blur-md p-2 shadow-2xl">
+            <div className="rounded-2xl border border-primary-foreground/10 bg-primary-foreground/5 backdrop-blur-md p-2 sm:p-3 shadow-2xl overflow-hidden">
               <div className="rounded-xl bg-foreground/90 p-1">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-primary-foreground/10">
                   <div className="flex gap-1.5">
@@ -99,13 +99,13 @@ export default function HomePage() {
                     <div className="w-3 h-3 rounded-full bg-warning/60" />
                     <div className="w-3 h-3 rounded-full bg-success/60" />
                   </div>
-                  <div className="flex-1 flex justify-center">
-                    <div className="bg-primary-foreground/10 rounded-md px-16 py-1 text-xs text-primary-foreground/40 font-mono">
+                  <div className="flex-1 flex justify-center min-w-0">
+                    <div className="max-w-full truncate bg-primary-foreground/10 rounded-md px-4 sm:px-16 py-1 text-[10px] sm:text-xs text-primary-foreground/40 font-mono">
                       app.gizaglobal.com/dashboard
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-3 p-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-3 sm:p-4">
                   {[
                     { label: "Total Jobs", value: "1,284", color: "text-primary-foreground" },
                     { label: "Completed", value: "1,180", color: "text-success" },
@@ -113,8 +113,8 @@ export default function HomePage() {
                     { label: "Accuracy", value: "99.2%", color: "text-primary" },
                   ].map((stat) => (
                     <div key={stat.label} className="bg-primary-foreground/5 rounded-lg p-3 text-center">
-                      <div className={`text-lg md:text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-                      <div className="text-xs text-primary-foreground/40 mt-1">{stat.label}</div>
+                      <div className={`text-base sm:text-lg md:text-2xl font-bold ${stat.color}`}>{stat.value}</div>
+                      <div className="text-[10px] sm:text-xs text-primary-foreground/40 mt-1">{stat.label}</div>
                     </div>
                   ))}
                 </div>
@@ -128,7 +128,7 @@ export default function HomePage() {
       <section className="py-12 border-b bg-muted/30">
         <div className="container">
           <p className="text-center text-sm text-muted-foreground mb-6 font-medium uppercase tracking-wider">Trusted by innovative teams</p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-16">
             {trustedBy.map((name) => (
               <span key={name} className="text-lg font-bold text-muted-foreground/40 tracking-tight">
                 {name}
@@ -148,7 +148,7 @@ export default function HomePage() {
               From upload to structured output, Giza Global handles the entire pipeline.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {features.map((f, i) => (
               <motion.div
                 key={f.title}
@@ -177,7 +177,7 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-5xl font-bold mb-4">Three simple steps</h2>
             <p className="text-muted-foreground text-lg">From document to data in under a minute.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
             {steps.map((s, i) => (
               <motion.div
                 key={s.step}
@@ -199,7 +199,7 @@ export default function HomePage() {
       {/* CTA */}
       <section className="py-24 md:py-32">
         <div className="container">
-          <div className="gradient-primary rounded-3xl p-12 md:p-20 text-center relative overflow-hidden">
+          <div className="gradient-primary rounded-3xl p-6 sm:p-12 md:p-20 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_hsl(250_83%_60%_/_0.4),_transparent_60%)]" />
             <div className="relative">
               <h2 className="text-3xl md:text-5xl font-bold text-primary-foreground mb-4">

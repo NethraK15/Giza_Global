@@ -20,7 +20,7 @@ export default function AboutPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="py-24 md:py-32">
+      <section className="py-16 sm:py-24 md:py-32">
         <div className="container max-w-4xl">
           <motion.p
             initial={{ opacity: 0 }}
@@ -52,9 +52,9 @@ export default function AboutPage() {
       </section>
 
       {/* Stats */}
-      <section className="py-16 bg-muted/30 border-y">
+      <section className="py-12 sm:py-16 bg-muted/30 border-y">
         <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 max-w-4xl mx-auto">
             {stats.map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -73,7 +73,7 @@ export default function AboutPage() {
       </section>
 
       {/* Mission */}
-      <section className="py-24">
+      <section className="py-16 sm:py-24">
         <div className="container max-w-4xl">
           <div className="flex items-start gap-4 mb-6">
             <div className="gradient-primary rounded-xl p-2.5 shadow-sm shrink-0">
@@ -93,13 +93,13 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="py-24 bg-muted/30 border-y">
+      <section className="py-16 sm:py-24 bg-muted/30 border-y">
         <div className="container">
           <div className="text-center mb-16">
             <p className="text-sm font-semibold text-primary mb-3 uppercase tracking-wider">Our Values</p>
             <h2 className="text-3xl md:text-4xl font-bold">What drives us</h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
             {values.map((v, i) => (
               <motion.div
                 key={v.title}
@@ -107,7 +107,7 @@ export default function AboutPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-card rounded-2xl border p-8 hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+                className="bg-card rounded-2xl border p-6 sm:p-8 hover:shadow-lg hover:border-primary/20 transition-all duration-300"
               >
                 <div className="gradient-primary rounded-xl w-12 h-12 flex items-center justify-center mb-5 shadow-sm">
                   <v.icon className="h-6 w-6 text-primary-foreground" />
@@ -121,7 +121,7 @@ export default function AboutPage() {
       </section>
 
       {/* Technology */}
-      <section className="py-24">
+      <section className="py-16 sm:py-24">
         <div className="container max-w-4xl">
           <div className="flex items-start gap-4 mb-6">
             <div className="gradient-primary rounded-xl p-2.5 shadow-sm shrink-0">
@@ -144,7 +144,7 @@ export default function AboutPage() {
       </section>
 
       {/* Contact */}
-      <section className="py-24 bg-muted/30 border-t">
+      <section className="py-16 sm:py-24 bg-muted/30 border-t">
         <div className="container max-w-2xl text-center">
           <div className="gradient-primary rounded-2xl w-14 h-14 flex items-center justify-center mx-auto mb-6 shadow-sm">
             <Mail className="h-7 w-7 text-primary-foreground" />

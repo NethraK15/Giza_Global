@@ -5,8 +5,8 @@ export function Footer() {
   return (
     <footer className="border-t bg-muted/30">
       <div className="container py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
-          <div className="col-span-2 md:col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
+          <div className="sm:col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2.5 font-bold text-lg mb-4">
               <div className="gradient-primary rounded-xl p-2 shadow-sm">
                 <FileText className="h-4 w-4 text-primary-foreground" />

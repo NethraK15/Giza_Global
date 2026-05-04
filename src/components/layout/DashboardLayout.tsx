@@ -13,7 +13,7 @@ export function DashboardLayout() {
             <div className="h-5 w-px bg-border" />
             <span className="text-sm font-medium text-muted-foreground">Dashboard</span>
           </header>
-          <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto bg-muted/30">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-auto bg-muted/30">
             <Outlet />
           </main>
         </div>

@@ -50,7 +50,7 @@ export default function PricingPage() {
   const [yearly, setYearly] = useState(false);
 
   return (
-    <div className="py-24 md:py-32">
+    <div className="py-16 sm:py-24 md:py-32 overflow-x-hidden">
       <div className="container">
         <div className="text-center mb-16">
           <motion.p
@@ -64,7 +64,7 @@ export default function PricingPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-bold mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4"
           >
             Simple, transparent pricing
           </motion.h1>
@@ -87,7 +87,7 @@ export default function PricingPage() {
             <button
               onClick={() => setYearly(false)}
               className={cn(
-                "px-5 py-2 rounded-full text-sm font-medium transition-all",
+                "px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all",
                 !yearly ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -96,7 +96,7 @@ export default function PricingPage() {
             <button
               onClick={() => setYearly(true)}
               className={cn(
-                "px-5 py-2 rounded-full text-sm font-medium transition-all",
+                "px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all",
                 yearly ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -105,7 +105,7 @@ export default function PricingPage() {
           </motion.div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
           {plans.map((plan, i) => {
             const price = yearly ? plan.yearlyPrice : plan.monthlyPrice;
             return (
@@ -115,9 +115,9 @@ export default function PricingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 + i * 0.1 }}
                 className={cn(
-                  "relative rounded-2xl border p-8 flex flex-col transition-all duration-300",
+                  "relative rounded-2xl border p-6 sm:p-8 flex flex-col transition-all duration-300",
                   plan.popular
-                    ? "border-primary shadow-glow bg-card scale-[1.02]"
+                    ? "border-primary shadow-glow bg-card md:scale-[1.02]"
                     : "bg-card hover:border-border hover:shadow-md"
                 )}
               >
@@ -130,7 +130,7 @@ export default function PricingPage() {
                   <h3 className="text-lg font-semibold mb-1">{plan.name}</h3>
                   <p className="text-sm text-muted-foreground mb-5">{plan.description}</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-5xl font-extrabold tracking-tight">${price}</span>
+                    <span className="text-4xl sm:text-5xl font-extrabold tracking-tight">${price}</span>
                     <span className="text-muted-foreground text-sm">/month</span>
                   </div>
                   {yearly && plan.monthlyPrice > 0 && (
@@ -170,7 +170,7 @@ export default function PricingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-16 max-w-2xl mx-auto bg-card rounded-2xl border p-8"
+          className="mt-16 max-w-2xl mx-auto bg-card rounded-2xl border p-6 sm:p-8"
         >
           <h3 className="text-lg font-semibold mb-4">File Upload Specifications</h3>
           <div className="grid md:grid-cols-2 gap-6 text-sm">

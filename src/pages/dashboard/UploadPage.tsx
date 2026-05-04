@@ -156,7 +156,7 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 px-4 sm:px-0">
       <div>
         <h1 className="text-2xl font-bold">Upload Document</h1>
         <p className="text-muted-foreground text-sm">Upload a document for AI processing.</p>
@@ -174,10 +174,10 @@ export default function UploadPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-8"
+                className="p-4 sm:p-8"
               >
                 <div
-                  className={`border-2 border-dashed rounded-2xl p-12 md:p-16 text-center transition-all duration-300 ${
+                  className={`border-2 border-dashed rounded-2xl p-6 sm:p-12 md:p-16 text-center transition-all duration-300 ${
                     state === "dragging"
                       ? "border-primary bg-primary/5 scale-[1.02]"
                       : "border-border hover:border-primary/40 hover:bg-muted/30"
@@ -216,7 +216,7 @@ export default function UploadPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-12 text-center"
+                className="p-6 sm:p-12 text-center"
               >
                 <div className="bg-primary/10 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-5">
                   <Loader2 className="h-7 w-7 text-primary animate-spin" />
@@ -236,7 +236,7 @@ export default function UploadPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-12 text-center"
+                className="p-6 sm:p-12 text-center"
               >
                 <div className="bg-success/10 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-5">
                   <CheckCircle2 className="h-7 w-7 text-success" />
@@ -256,7 +256,7 @@ export default function UploadPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-12 text-center"
+                className="p-6 sm:p-12 text-center"
               >
                 <div className="bg-destructive/10 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-5">
                   <AlertCircle className="h-7 w-7 text-destructive" />

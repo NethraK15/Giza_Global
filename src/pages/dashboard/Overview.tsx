@@ -27,7 +27,7 @@ export default function DashboardOverview() {
   ];
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-4 md:space-y-6 max-w-6xl px-0">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -78,7 +78,7 @@ export default function DashboardOverview() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {stats.map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -87,13 +87,13 @@ export default function DashboardOverview() {
             transition={{ delay: i * 0.05 }}
           >
             <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-muted-foreground font-medium">{stat.label}</span>
+              <CardContent className="p-3 sm:p-5">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                  <span className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</span>
                   <stat.icon className={`h-4 w-4 ${stat.color} opacity-60`} />
                 </div>
                 <div className="flex items-end gap-2">
-                  <span className={`text-3xl font-bold ${stat.color}`}>{stat.value}</span>
+                  <span className={`text-2xl sm:text-3xl font-bold ${stat.color}`}>{stat.value}</span>
                   {stat.trend && (
                     <span className="text-xs text-success font-medium flex items-center gap-0.5 mb-1">
                       <TrendingUp className="h-3 w-3" />{stat.trend}
@@ -108,9 +108,9 @@ export default function DashboardOverview() {
 
       {/* Usage */}
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">{billing?.usage.window === "daily" ? "Daily" : "Monthly"} Usage</CardTitle></CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between text-sm mb-3">
+        <CardHeader className="pb-2 sm:pb-3"><CardTitle className="text-sm sm:text-base font-semibold">{billing?.usage.window === "daily" ? "Daily" : "Monthly"} Usage</CardTitle></CardHeader>
+        <CardContent className="p-3 sm:p-6">
+          <div className="flex items-center justify-between text-xs sm:text-sm mb-3">
             <span className="text-muted-foreground">
               {loading ? "Loading..." : usageLabel}
             </span>
@@ -125,23 +125,23 @@ export default function DashboardOverview() {
 
       {/* Recent jobs */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base font-semibold">Recent Jobs</CardTitle>
-          <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 sm:pb-3 gap-2">
+          <CardTitle className="text-sm sm:text-base font-semibold">Recent Jobs</CardTitle>
+          <Button variant="ghost" size="sm" className="text-xs sm:text-sm text-muted-foreground w-fit" asChild>
             <Link to="/dashboard/jobs">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6">
           <div className="space-y-1">
             {mockJobs.slice(0, 4).map((job) => (
-              <div key={job.id} className="flex items-center justify-between py-3 px-3 rounded-lg hover:bg-muted/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="bg-muted rounded-lg p-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
+              <div key={job.id} className="flex items-center justify-between py-2 sm:py-3 px-2 sm:px-3 rounded-lg hover:bg-muted/50 transition-colors gap-2">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="bg-muted rounded-lg p-1 sm:p-2 shrink-0">
+                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">{job.fileName}</p>
-                    <p className="text-xs text-muted-foreground">{job.uploadedAt}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-medium truncate">{job.fileName}</p>
+                    <p className="text-xs text-muted-foreground hidden sm:block">{job.uploadedAt}</p>
                   </div>
                 </div>
                 <StatusBadge status={job.status} />
