@@ -206,7 +206,7 @@ export default function HomePage() {
                 Ready to automate your document workflow?
               </h2>
               <p className="text-primary-foreground/70 text-lg mb-10 max-w-xl mx-auto">
-                Start with 20 free uploads per month. No credit card required.
+                Start with Free 5 files/day. No credit card required.
               </p>
               <Button size="lg" className="bg-background text-foreground hover:bg-background/90 text-base h-12 px-8 shadow-lg" asChild>
                 <Link to="/auth?tab=signup">

@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { getApiUrl, API_ENDPOINTS } from "@/lib/api-config";
 
 const benefits = [
-  "20 free document uploads per month",
+  "Free 5 files/day",
   "AI-powered extraction in seconds",
   "Export to JSON, CSV, and more",
   "No credit card required",

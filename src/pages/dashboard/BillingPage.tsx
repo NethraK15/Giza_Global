@@ -76,7 +76,7 @@ export default function BillingPage() {
           <CheckCircle2 className="h-5 w-5 text-success mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-semibold text-success">Successfully upgraded to Paid Plan!</p>
-            <p className="text-xs text-success/70 mt-0.5">Your plan now includes 1000 uploads/month and higher queue priority.</p>
+            <p className="text-xs text-success/70 mt-0.5">Your plan now includes 1000 files/month and higher queue priority.</p>
           </div>
         </motion.div>
       )}
@@ -154,7 +154,7 @@ export default function BillingPage() {
               <div>
                 <h3 className="font-semibold text-primary-foreground mb-1">You're running low on uploads</h3>
                 <p className="text-sm text-primary-foreground/70 mb-4">
-                  Upgrade to Paid for 1000 uploads/month, higher queue priority, and subscription management.
+                  Upgrade to Paid $20/month for 1000 files/month, higher queue priority, and subscription management.
                 </p>
                 <Button 
                   size="sm" 
