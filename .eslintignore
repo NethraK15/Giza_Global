@@ -1,0 +1,6 @@
+.venv
+.venv/**
+server/**
+**/site-packages/**
+node_modules/
+public/
